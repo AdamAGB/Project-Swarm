@@ -1,144 +1,58 @@
-import { useState } from 'react';
-import './App.css';
+import { useApiKey } from './hooks/useApiKey';
+import { usePollOrchestrator } from './hooks/usePollOrchestrator';
 import { ApiKeyInput } from './components/ApiKeyInput';
-import { MarketDescriptionForm } from './components/MarketDescriptionForm';
-import { PersonaList } from './components/PersonaList';
-import { QuestionForm } from './components/QuestionForm';
-import { ResultsChart } from './components/ResultsChart';
-import { OpenAIService } from './services/openai';
-import type { Persona, VotingStatistics, VotingResult } from './types';
-import { calculateVotingStatistics } from './utils/statistics';
+import { PollInput } from './components/PollInput';
+import { LoadingOrchestra } from './components/LoadingOrchestra';
+import { ResultsDashboard } from './components/ResultsDashboard';
+import './App.css';
 
 function App() {
-  const [apiKey, setApiKey] = useState('');
-  const [personas, setPersonas] = useState<Persona[]>([]);
-  const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
-  const [votingResults, setVotingResults] = useState<VotingResult[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState('');
-  const [currentOptions, setCurrentOptions] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isVoting, setIsVoting] = useState(false);
-  const [votingProgress, setVotingProgress] = useState<{ current: number; total: number } | undefined>();
-  const [error, setError] = useState('');
+  const { apiKey, saveKey, clearKey, hasKey } = useApiKey();
+  const { personas, progress, results, runPoll, animatedVoting } = usePollOrchestrator(apiKey);
 
-  const handleGeneratePersonas = async (description: string) => {
-    if (!apiKey) {
-      setError('Please enter your OpenAI API key first');
-      return;
-    }
-
-    setIsGenerating(true);
-    setError('');
-    setPersonas([]);
-    setStatistics(null);
-    setVotingResults([]);
-    setCurrentQuestion('');
-    setCurrentOptions([]);
-
-    try {
-      const service = new OpenAIService(apiKey);
-      const generatedPersonas = await service.generatePersonas(description);
-      setPersonas(generatedPersonas);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate personas');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleVote = async (question: string, options: string[]) => {
-    if (!apiKey) {
-      setError('Please enter your OpenAI API key first');
-      return;
-    }
-
-    if (personas.length === 0) {
-      setError('Please generate personas first');
-      return;
-    }
-
-    if (options.length < 2) {
-      setError('Please provide at least 2 options');
-      return;
-    }
-
-    setIsVoting(true);
-    setError('');
-    setStatistics(null);
-    setVotingResults([]);
-    setCurrentQuestion(question);
-    setCurrentOptions(options);
-    setVotingProgress({ current: 0, total: personas.length });
-
-    try {
-      const service = new OpenAIService(apiKey);
-      const results = await service.collectVotes(personas, question, options, (current, total) => {
-        setVotingProgress({ current, total });
-      });
-
-      setVotingResults(results);
-      const stats = calculateVotingStatistics(results);
-      setStatistics(stats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to collect votes');
-    } finally {
-      setIsVoting(false);
-      setVotingProgress(undefined);
-    }
-  };
+  const isLoading = progress.stage !== 'idle' && progress.stage !== 'complete' && progress.stage !== 'error';
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AI Persona Voting</h1>
-        <p className="subtitle">
-          Generate 50 AI personas and have them vote on multiple choice questions
-        </p>
+        <div className="header-content">
+          <h1 className="app-title">
+            <span className="title-icon">🐝</span>
+            Swarm Poll
+          </h1>
+          <p className="app-subtitle">1,000 synthetic personas. 4 AI calls. Instant insights.</p>
+        </div>
       </header>
 
       <main className="app-main">
-        <ApiKeyInput onApiKeyChange={setApiKey} />
+        <ApiKeyInput apiKey={apiKey} onSave={saveKey} onClear={clearKey} />
 
-        {error && (
-          <div className="error-message">
-            <strong>Error:</strong> {error}
+        {hasKey && (
+          <PollInput onSubmit={runPoll} disabled={!hasKey} isLoading={isLoading} />
+        )}
+
+        {isLoading && (
+          <LoadingOrchestra
+            progress={progress}
+            rollingCounts={animatedVoting.rollingCounts}
+            visibleVoteCount={animatedVoting.visibleVoteCount}
+          />
+        )}
+
+        {progress.stage === 'error' && (
+          <div className="error-banner">
+            <span>⚠️</span>
+            <p>{progress.errorMessage}</p>
           </div>
         )}
 
-        <MarketDescriptionForm
-          onGenerate={handleGeneratePersonas}
-          isLoading={isGenerating}
-          disabled={!apiKey}
-        />
-
-        {personas.length > 0 && (
-          <>
-            <PersonaList personas={personas} />
-
-            <QuestionForm
-              onVote={handleVote}
-              isLoading={isVoting}
-              disabled={!apiKey || personas.length === 0}
-              progress={votingProgress}
-            />
-
-            {statistics && currentQuestion && (
-              <ResultsChart
-                statistics={statistics}
-                question={currentQuestion}
-                options={currentOptions}
-                votingResults={votingResults}
-                personas={personas}
-              />
-            )}
-          </>
+        {results && personas && (
+          <ResultsDashboard results={results} personas={personas} />
         )}
       </main>
 
       <footer className="app-footer">
-        <p>
-          Powered by OpenAI GPT-4o-mini • Built with React + TypeScript + Chart.js
-        </p>
+        <p>Swarm Poll — Synthetic consumer research powered by structured simulation</p>
       </footer>
     </div>
   );

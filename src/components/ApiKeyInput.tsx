@@ -1,60 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-interface ApiKeyInputProps {
-  onApiKeyChange: (apiKey: string) => void;
+interface Props {
+  apiKey: string;
+  onSave: (key: string) => void;
+  onClear: () => void;
 }
 
-export function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
-  const [apiKey, setApiKey] = useState('');
-  const [isVisible, setIsVisible] = useState(false);
+export function ApiKeyInput({ apiKey, onSave, onClear }: Props) {
+  const [inputValue, setInputValue] = useState(apiKey);
+  const [showKey, setShowKey] = useState(false);
 
-  useEffect(() => {
-    const savedKey = localStorage.getItem('openai_api_key');
-    if (savedKey) {
-      setApiKey(savedKey);
-      onApiKeyChange(savedKey);
-    }
-  }, [onApiKeyChange]);
+  const hasKey = apiKey.length > 0;
 
-  const handleSave = () => {
-    localStorage.setItem('openai_api_key', apiKey);
-    onApiKeyChange(apiKey);
-    alert('API key saved!');
-  };
-
-  const handleClear = () => {
-    setApiKey('');
-    localStorage.removeItem('openai_api_key');
-    onApiKeyChange('');
-  };
+  if (hasKey) {
+    return (
+      <div className="api-key-bar">
+        <span className="api-key-status">
+          <span className="status-dot active" />
+          API Key Connected
+        </span>
+        <button className="btn-text" onClick={onClear}>Change Key</button>
+      </div>
+    );
+  }
 
   return (
-    <div className="api-key-input">
-      <h3>OpenAI API Key</h3>
-      <div className="input-group">
-        <input
-          type={isVisible ? 'text' : 'password'}
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="sk-..."
-          className="api-key-field"
-        />
-        <button onClick={() => setIsVisible(!isVisible)} className="btn-secondary">
-          {isVisible ? 'Hide' : 'Show'}
-        </button>
-        <button onClick={handleSave} disabled={!apiKey} className="btn-primary">
-          Save
-        </button>
-        <button onClick={handleClear} className="btn-secondary">
-          Clear
+    <div className="api-key-setup">
+      <div className="api-key-header">
+        <h3>Connect Your OpenAI API Key</h3>
+        <p>Your key is stored locally and only used to make API calls.</p>
+      </div>
+      <div className="api-key-form">
+        <div className="input-with-toggle">
+          <input
+            type={showKey ? 'text' : 'password'}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="sk-..."
+            className="api-key-input"
+          />
+          <button
+            className="btn-icon"
+            onClick={() => setShowKey(!showKey)}
+            title={showKey ? 'Hide' : 'Show'}
+          >
+            {showKey ? '🙈' : '👁'}
+          </button>
+        </div>
+        <button
+          className="btn-primary"
+          onClick={() => onSave(inputValue)}
+          disabled={!inputValue.startsWith('sk-')}
+        >
+          Save Key
         </button>
       </div>
-      <p className="help-text">
-        Get your API key from{' '}
-        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
-          platform.openai.com/api-keys
-        </a>
-      </p>
     </div>
   );
 }
