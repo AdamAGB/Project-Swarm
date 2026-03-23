@@ -702,19 +702,18 @@ export function V4App() {
               boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
               display: 'flex', flexDirection: 'column',
             }}>
-              <p style={{ textAlign: 'center', fontSize: '16px', fontWeight: 600, color: '#0a1f18', margin: '0 0 4px' }}>
+              <p style={{ textAlign: 'center', fontSize: '16px', fontWeight: 600, color: '#0a1f18', margin: '0 0 12px' }}>
                 What's the best gummy bear color?
               </p>
-              <p style={{ textAlign: 'center', fontSize: '12px', color: '#7aaa98', margin: '0 0 12px' }}>
-                200 voters
+              <VoteParticleViz
+                segmentVotes={heroMockData.segmentVotes}
+                aggregates={heroMockData.aggregates}
+                options={HERO_OPTIONS}
+                hideHeader
+              />
+              <p style={{ textAlign: 'center', fontSize: '12px', color: '#7aaa98', margin: '4px 0 0' }}>
+                Vote Results — 200 voters
               </p>
-              <div style={{ flex: 1 }}>
-                <VoteParticleViz
-                  segmentVotes={heroMockData.segmentVotes}
-                  aggregates={heroMockData.aggregates}
-                  options={HERO_OPTIONS}
-                />
-              </div>
             </div>
           </div>
 

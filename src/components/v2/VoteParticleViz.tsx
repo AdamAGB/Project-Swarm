@@ -28,13 +28,14 @@ interface Props {
   segmentVotes: V2SegmentVoteResult[];
   aggregates: V2VoteAggregates;
   options: string[];
+  hideHeader?: boolean;
 }
 
 function easeOutCubic(t: number): number {
   return 1 - (1 - t) ** 3;
 }
 
-export function VoteParticleViz({ segmentVotes, aggregates, options }: Props) {
+export function VoteParticleViz({ segmentVotes, aggregates, options, hideHeader }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -268,16 +269,18 @@ export function VoteParticleViz({ segmentVotes, aggregates, options }: Props) {
 
   return (
     <div className="v2-section">
-      <div className="v2-section-header">
-        <h2>Vote Results ({aggregates.totalVotes.toLocaleString()} simulated votes)</h2>
-        <button
-          className="v3-replay-btn"
-          onClick={() => setReplayKey((k) => k + 1)}
-          title="Replay animation"
-        >
-          &#x21bb;
-        </button>
-      </div>
+      {!hideHeader && (
+        <div className="v2-section-header">
+          <h2>Vote Results ({aggregates.totalVotes.toLocaleString()} simulated votes)</h2>
+          <button
+            className="v3-replay-btn"
+            onClick={() => setReplayKey((k) => k + 1)}
+            title="Replay animation"
+          >
+            &#x21bb;
+          </button>
+        </div>
+      )}
       <div className="v2-particle-container" ref={containerRef}>
         <canvas ref={canvasRef} className="v2-particle-canvas" />
       </div>
