@@ -755,17 +755,15 @@ export function V4App() {
             <span style={{ fontSize: '15px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
             <div style={{ flex: 1 }} />
             <button
+              type="button"
               onClick={() => {
-                localStorage.removeItem('openai_api_key');
-                localStorage.removeItem('anthropic_api_key');
-                localStorage.removeItem('gemini_api_key');
-                localStorage.removeItem('invite_code');
-                localStorage.removeItem('demo_validated');
-                window.location.href = '/';
+                localStorage.clear();
+                // Hard reload — bypasses React state entirely
+                document.location.href = document.location.origin + '/?logout=' + Date.now();
               }}
               style={{
                 background: 'none', border: 'none', color: '#059669',
-                fontSize: '12px', cursor: 'pointer', padding: '4px 0',
+                fontSize: '12px', cursor: 'pointer', padding: '4px 8px',
               }}
             >
               Log Out
