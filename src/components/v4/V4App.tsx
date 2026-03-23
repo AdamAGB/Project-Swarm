@@ -22,21 +22,21 @@ import '../v3/V3App.css';
 type Step = 'input' | 'loading' | 'edit-options' | 'edit-segments' | 'results' | 'error';
 
 /* Hero viz mock data */
-const HERO_OPTIONS = ['Volt Rush', 'ZenFuel', 'NovaBurst', 'PureCharge'];
+const HERO_OPTIONS = ['Red', 'Blue', 'Clear', 'Orange', 'Brown'];
 const heroMockData = (() => {
-  const counts: Record<string, number> = { 'Volt Rush': 62, 'ZenFuel': 54, 'NovaBurst': 48, 'PureCharge': 36 };
+  const counts: Record<string, number> = { 'Red': 72, 'Blue': 48, 'Clear': 38, 'Orange': 28, 'Brown': 14 };
   const total = Object.values(counts).reduce((s, v) => s + v, 0);
   const pcts: Record<string, number> = {};
   for (const [k, v] of Object.entries(counts)) pcts[k] = (v / total) * 100;
   return {
     segmentVotes: [{
       segmentName: 'General', populationShare: 1, votesAllocated: total,
-      voteCounts: counts, votePercentages: pcts, preferenceScores: counts, winnerInSegment: 'Volt Rush',
+      voteCounts: counts, votePercentages: pcts, preferenceScores: counts, winnerInSegment: 'Red',
     }] as V2SegmentVoteResult[],
     aggregates: {
       totalVotes: total, voteCounts: counts, votePercentages: pcts,
-      winner: 'Volt Rush', winnerCount: 62, winnerPercentage: pcts['Volt Rush'],
-      runnerUp: 'ZenFuel', runnerUpCount: 54, runnerUpPercentage: pcts['ZenFuel'],
+      winner: 'Red', winnerCount: 72, winnerPercentage: pcts['Red'],
+      runnerUp: 'Blue', runnerUpCount: 48, runnerUpPercentage: pcts['Blue'],
     } as V2VoteAggregates,
   };
 })();
@@ -697,7 +697,7 @@ export function V4App() {
               padding: '20px 12px', border: '1px solid rgba(255,255,255,0.06)',
             }}>
               <p style={{ textAlign: 'center', fontSize: '14px', color: '#9ca3af', marginBottom: '10px', fontStyle: 'italic' }}>
-                "Which product name resonates best for a new energy drink?"
+                "What's the best gummy bear color?"
               </p>
               <VoteParticleViz
                 segmentVotes={heroMockData.segmentVotes}
@@ -745,17 +745,12 @@ export function V4App() {
             <div style={{ flex: 1 }} />
             <button
               onClick={() => {
-                setKeys({ openai: '', anthropic: '', gemini: '' });
-                setInviteCode('');
-                setDemoMode(false);
-                setDemoValidated(false);
-                setShowKeys(false);
-                setStep('input');
                 localStorage.removeItem('openai_api_key');
                 localStorage.removeItem('anthropic_api_key');
                 localStorage.removeItem('gemini_api_key');
                 localStorage.removeItem('invite_code');
                 localStorage.removeItem('demo_validated');
+                window.location.reload();
               }}
               style={{
                 background: 'none', border: 'none', color: '#6366f1',
