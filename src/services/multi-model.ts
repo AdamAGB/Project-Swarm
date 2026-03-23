@@ -187,7 +187,18 @@ function shuffleArray<T>(arr: T[]): T[] {
   return copy;
 }
 
-// sampleFromDistribution removed — votes now use highest-probability option
+function sampleFromDistribution(
+  distribution: Record<string, number>,
+  options: string[],
+): string {
+  const r = Math.random();
+  let cumulative = 0;
+  for (const opt of options) {
+    cumulative += distribution[opt] ?? 0;
+    if (r <= cumulative) return opt;
+  }
+  return options[options.length - 1];
+}
 
 const BATCH_TEMPERATURES = [0.7, 0.9, 0.9, 1.1];
 
