@@ -6,6 +6,7 @@ import { V4App } from './components/v4/V4App';
 import { VizDemo } from './components/viz/VizDemo';
 import { HomepageDemo } from './components/viz/HomepageDemo';
 import { InputPageDemo } from './components/viz/InputPageDemo';
+import { ColorDemo } from './components/viz/ColorDemo';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/viz" element={<VizDemo />} />
         <Route path="/homepage" element={<HomepageDemo />} />
         <Route path="/input" element={<InputPageDemo />} />
+        <Route path="/colors" element={<ColorDemo />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
