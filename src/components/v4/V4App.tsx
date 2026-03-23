@@ -777,7 +777,6 @@ export function V4App() {
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="e.g. Which tagline resonates best for our rebrand?"
-                autoFocus
                 style={{ background: '#111318', border: '1px solid #252530', borderRadius: '10px', color: '#e0e0e0' }}
               />
             <div
