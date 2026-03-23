@@ -21,6 +21,26 @@ import '../v3/V3App.css';
 
 type Step = 'input' | 'loading' | 'edit-options' | 'edit-segments' | 'results' | 'error';
 
+/* Hero viz mock data */
+const HERO_OPTIONS = ['Volt Rush', 'ZenFuel', 'NovaBurst', 'PureCharge'];
+const heroMockData = (() => {
+  const counts: Record<string, number> = { 'Volt Rush': 62, 'ZenFuel': 54, 'NovaBurst': 48, 'PureCharge': 36 };
+  const total = Object.values(counts).reduce((s, v) => s + v, 0);
+  const pcts: Record<string, number> = {};
+  for (const [k, v] of Object.entries(counts)) pcts[k] = (v / total) * 100;
+  return {
+    segmentVotes: [{
+      segmentName: 'General', populationShare: 1, votesAllocated: total,
+      voteCounts: counts, votePercentages: pcts, preferenceScores: counts, winnerInSegment: 'Volt Rush',
+    }] as V2SegmentVoteResult[],
+    aggregates: {
+      totalVotes: total, voteCounts: counts, votePercentages: pcts,
+      winner: 'Volt Rush', winnerCount: 62, winnerPercentage: pcts['Volt Rush'],
+      runnerUp: 'ZenFuel', runnerUpCount: 54, runnerUpPercentage: pcts['ZenFuel'],
+    } as V2VoteAggregates,
+  };
+})();
+
 function formatShare(share: number): string {
   return `${Math.round(share * 100)}%`;
 }
@@ -556,133 +576,136 @@ export function V4App() {
   return (
     <div className="v3-app">
       {!hasKey ? (
-        /* ---- Onboarding ---- */
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', minHeight: '70vh', textAlign: 'center',
-          padding: '24px 16px',
-        }}>
-          <h1 className="v3-title" style={{ marginBottom: '8px' }}>Project Swarm</h1>
-          <p style={{ color: '#888', fontSize: '15px', maxWidth: '440px', lineHeight: 1.5, marginBottom: '32px' }}>
-            Generate hundreds of synthetic AI voters with custom segments to poll on any question.
-          </p>
-
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '460px' }}>
-            {/* Simple — Hosted */}
-            <button
-              onClick={() => { setDemoMode(true); setShowKeys(true); }}
-              style={{
-                flex: '1 1 200px', padding: '20px 16px', borderRadius: '12px', cursor: 'pointer',
-                border: (demoMode && showKeys) ? '2px solid #4a9eff' : '1px solid #333',
-                background: (demoMode && showKeys) ? 'rgba(74, 158, 255, 0.08)' : '#111',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ fontSize: '15px', fontWeight: 600, color: '#e0e0e0', marginBottom: '6px' }}>
-                Simple — Hosted
-              </div>
-              <div style={{ fontSize: '12px', color: '#888', lineHeight: 1.4 }}>
-                Enter an invite code to get started instantly. No setup needed.
-              </div>
-            </button>
-
-            {/* Advanced — BYOK */}
-            <button
-              onClick={() => { setDemoMode(false); setShowKeys(true); }}
-              style={{
-                flex: '1 1 200px', padding: '20px 16px', borderRadius: '12px', cursor: 'pointer',
-                border: (!demoMode && showKeys) ? '2px solid #4a9eff' : '1px solid #333',
-                background: (!demoMode && showKeys) ? 'rgba(74, 158, 255, 0.08)' : '#111',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ fontSize: '15px', fontWeight: 600, color: '#e0e0e0', marginBottom: '6px' }}>
-                Advanced — Use My Own API Keys
-              </div>
-              <div style={{ fontSize: '12px', color: '#888', lineHeight: 1.4 }}>
-                Bring your own OpenAI, Anthropic, or Gemini keys. More control.
-              </div>
-            </button>
+        /* ---- Onboarding: split-screen layout ---- */
+        <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
+          {/* Top bar with title */}
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #1a1a1a' }}>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
           </div>
 
-          {/* Expanded panel below the buttons */}
-          {showKeys && (
-            <div style={{ marginTop: '20px', width: '100%', maxWidth: '420px', textAlign: 'left' }}>
-              {demoMode ? (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <input
-                      type="text"
-                      value={inviteCode}
-                      onChange={(e) => saveInviteCode(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') validateInviteCode(); }}
-                      placeholder="Enter invite code"
-                      autoFocus
-                      style={{
-                        flex: 1, padding: '10px 14px', fontSize: '14px',
-                        background: '#1a1a2e', borderRadius: '8px', color: '#ccc',
-                        border: inviteError ? '1px solid #e11d48' : inviteCode ? '1px solid #2a4a2a' : '1px solid #333',
-                      }}
-                    />
-                    <button
-                      onClick={validateInviteCode}
-                      disabled={!inviteCode.trim() || inviteLoading}
-                      style={{
-                        padding: '10px 20px', fontSize: '14px', fontWeight: 600,
-                        borderRadius: '8px', cursor: 'pointer', border: 'none',
-                        background: inviteCode.trim() ? '#4a9eff' : '#333',
-                        color: inviteCode.trim() ? '#fff' : '#666',
-                        opacity: inviteLoading ? 0.6 : 1,
-                      }}
-                    >
-                      {inviteLoading ? '...' : 'Continue'}
-                    </button>
-                  </div>
-                  {inviteError && (
-                    <p style={{ color: '#e11d48', fontSize: '12px', margin: '6px 0 0' }}>{inviteError}</p>
-                  )}
-                  <p style={{ color: '#555', fontSize: '12px', margin: '8px 0 0' }}>
-                    Uses 3 AI models for diverse results. Rate limited to prevent abuse.
-                  </p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {([
-                    { key: 'openai' as const, label: 'OpenAI', placeholder: 'sk-...', url: 'https://platform.openai.com/api-keys' },
-                    { key: 'anthropic' as const, label: 'Anthropic', placeholder: 'sk-ant-...', url: 'https://console.anthropic.com/settings/keys' },
-                    { key: 'gemini' as const, label: 'Gemini', placeholder: 'AI...', url: 'https://aistudio.google.com/apikey' },
-                  ]).map(({ key: k, label, placeholder, url }) => (
-                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#999', fontSize: '13px', minWidth: '80px', textDecoration: 'none' }}
-                        title={`Get ${label} API key`}
-                      >
-                        {label} <span style={{ fontSize: '10px', opacity: 0.6 }}>↗</span>
-                      </a>
-                      <input
-                        type="password"
-                        value={keys[k]}
-                        onChange={(e) => saveKey(k, e.target.value)}
-                        placeholder={placeholder}
-                        style={{
-                          flex: 1, padding: '8px 12px', fontSize: '13px',
-                          background: '#1a1a2e', borderRadius: '6px', color: '#ccc',
-                          border: keys[k] ? '1px solid #2a4a2a' : '1px solid #333',
-                        }}
-                      />
-                      {keys[k] && <span style={{ color: '#4ade80', fontSize: '14px' }}>✓</span>}
+          {/* Main split content */}
+          <div style={{
+            flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px',
+            maxWidth: 1000, margin: '0 auto', width: '100%', padding: '48px 24px',
+            alignItems: 'center',
+          }}>
+            {/* Left: copy + auth */}
+            <div>
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6366f1', marginBottom: '14px', fontWeight: 600 }}>
+                Synthetic Audience Intelligence
+              </div>
+              <h1 style={{ fontSize: '34px', fontWeight: 800, lineHeight: 1.15, marginBottom: '16px', color: '#fff' }}>
+                Test any idea with<br />hundreds of AI voters.
+              </h1>
+              <p style={{ fontSize: '15px', color: '#8892a6', lineHeight: 1.6, marginBottom: '28px' }}>
+                Generate synthetic audiences across custom segments. See how different groups respond to your product names, taglines, concepts, and positioning — powered by GPT, Claude, and Gemini.
+              </p>
+
+              {/* Auth mode cards */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                <button
+                  onClick={() => { setDemoMode(true); setShowKeys(true); }}
+                  style={{
+                    flex: 1, padding: '14px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
+                    border: (demoMode && showKeys) ? '2px solid #4a9eff' : '1px solid #282828',
+                    background: (demoMode && showKeys) ? 'rgba(74, 158, 255, 0.06)' : '#111',
+                  }}
+                >
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0e0e0', marginBottom: '3px' }}>Simple — Hosted</div>
+                  <div style={{ fontSize: '11px', color: '#666', lineHeight: 1.3 }}>Enter invite code</div>
+                </button>
+                <button
+                  onClick={() => { setDemoMode(false); setShowKeys(true); }}
+                  style={{
+                    flex: 1, padding: '14px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
+                    border: (!demoMode && showKeys) ? '2px solid #4a9eff' : '1px solid #282828',
+                    background: (!demoMode && showKeys) ? 'rgba(74, 158, 255, 0.06)' : '#111',
+                  }}
+                >
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0e0e0', marginBottom: '3px' }}>Advanced — Own Keys</div>
+                  <div style={{ fontSize: '11px', color: '#666', lineHeight: 1.3 }}>Bring OpenAI, Claude, Gemini</div>
+                </button>
+              </div>
+
+              {/* Auth inputs */}
+              {showKeys && (
+                <div style={{ marginTop: '4px' }}>
+                  {demoMode ? (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="text"
+                          value={inviteCode}
+                          onChange={(e) => saveInviteCode(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') validateInviteCode(); }}
+                          placeholder="Enter invite code"
+                          autoFocus
+                          style={{
+                            flex: 1, padding: '10px 14px', fontSize: '14px',
+                            background: '#1a1a2e', borderRadius: '8px', color: '#ccc',
+                            border: inviteError ? '1px solid #e11d48' : inviteCode ? '1px solid #2a4a2a' : '1px solid #333',
+                          }}
+                        />
+                        <button
+                          onClick={validateInviteCode}
+                          disabled={!inviteCode.trim() || inviteLoading}
+                          className="btn-primary"
+                          style={{ padding: '10px 20px', fontSize: '14px', borderRadius: '8px', opacity: inviteLoading ? 0.6 : 1 }}
+                        >
+                          {inviteLoading ? '...' : 'Continue'}
+                        </button>
+                      </div>
+                      {inviteError && (
+                        <p style={{ color: '#e11d48', fontSize: '12px', margin: '6px 0 0' }}>{inviteError}</p>
+                      )}
                     </div>
-                  ))}
-                  <p style={{ color: '#555', fontSize: '12px', margin: '4px 0 0' }}>
-                    At least one key required. More models = more diverse, robust results.
-                  </p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {([
+                        { key: 'openai' as const, label: 'OpenAI', placeholder: 'sk-...', url: 'https://platform.openai.com/api-keys' },
+                        { key: 'anthropic' as const, label: 'Anthropic', placeholder: 'sk-ant-...', url: 'https://console.anthropic.com/settings/keys' },
+                        { key: 'gemini' as const, label: 'Gemini', placeholder: 'AI...', url: 'https://aistudio.google.com/apikey' },
+                      ]).map(({ key: k, label, placeholder, url }) => (
+                        <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <a href={url} target="_blank" rel="noopener noreferrer"
+                            style={{ color: '#999', fontSize: '12px', minWidth: '74px', textDecoration: 'none' }}>
+                            {label} <span style={{ fontSize: '9px', opacity: 0.5 }}>↗</span>
+                          </a>
+                          <input type="password" value={keys[k]} onChange={(e) => saveKey(k, e.target.value)}
+                            placeholder={placeholder}
+                            style={{
+                              flex: 1, padding: '8px 10px', fontSize: '12px',
+                              background: '#1a1a2e', borderRadius: '6px', color: '#ccc',
+                              border: keys[k] ? '1px solid #2a4a2a' : '1px solid #333',
+                            }}
+                          />
+                          {keys[k] && <span style={{ color: '#4ade80', fontSize: '13px' }}>✓</span>}
+                        </div>
+                      ))}
+                      <p style={{ color: '#555', fontSize: '11px', margin: '2px 0 0' }}>
+                        At least one key required. More models = better results.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+
+            {/* Right: live viz demo */}
+            <div style={{
+              background: 'rgba(255,255,255,0.02)', borderRadius: '14px',
+              padding: '14px 6px', border: '1px solid rgba(255,255,255,0.05)',
+            }}>
+              <p style={{ textAlign: 'center', fontSize: '12px', color: '#555', marginBottom: '6px' }}>
+                "Which product name resonates best for a new energy drink?"
+              </p>
+              <VoteParticleViz
+                segmentVotes={heroMockData.segmentVotes}
+                aggregates={heroMockData.aggregates}
+                options={HERO_OPTIONS}
+              />
+            </div>
+          </div>
         </div>
       ) : step === 'input' ? (
         <div className="v3-input-screen">
