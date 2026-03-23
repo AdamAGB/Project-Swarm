@@ -7,6 +7,7 @@ import { VizDemo } from './components/viz/VizDemo';
 import { HomepageDemo } from './components/viz/HomepageDemo';
 import { InputPageDemo } from './components/viz/InputPageDemo';
 import { ColorDemo } from './components/viz/ColorDemo';
+import { LightThemeDemo } from './components/viz/LightThemeDemo';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/homepage" element={<HomepageDemo />} />
         <Route path="/input" element={<InputPageDemo />} />
         <Route path="/colors" element={<ColorDemo />} />
+        <Route path="/light" element={<LightThemeDemo />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
