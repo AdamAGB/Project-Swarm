@@ -761,7 +761,7 @@ export function V4App() {
                 localStorage.removeItem('gemini_api_key');
                 localStorage.removeItem('invite_code');
                 localStorage.removeItem('demo_validated');
-                window.location.reload();
+                window.location.href = '/';
               }}
               style={{
                 background: 'none', border: 'none', color: '#059669',
