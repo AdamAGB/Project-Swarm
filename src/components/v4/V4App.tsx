@@ -574,7 +574,7 @@ export function V4App() {
   }
 
   return (
-    <div className={hasKey ? 'v3-app' : ''}>
+    <div>
       {!hasKey ? (
         /* ---- Onboarding: split-screen layout ---- */
         <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
@@ -843,12 +843,12 @@ export function V4App() {
           </div>
         </div>
       ) : step === 'loading' ? (
-        <div className="v3-loading">
+        <div className="v3-app v3-loading">
           <div className="v2-spinner" />
           <p className="v3-loading-label">{loadingLabel || progressLabel}</p>
         </div>
       ) : step === 'edit-options' ? (
-        <div className="v3-edit-screen">
+        <div className="v3-app v3-edit-screen">
           <button className="v3-back-btn" onClick={handleReset}>&larr; Back</button>
           <h2 className="v3-edit-header">Edit Options</h2>
           <p className="v3-edit-question">{question}</p>
@@ -904,7 +904,7 @@ export function V4App() {
           </div>
         </div>
       ) : step === 'edit-segments' && framework ? (
-        <div className="v3-edit-screen">
+        <div className="v3-app v3-edit-screen">
           <button className="v3-back-btn" onClick={() => setStep('edit-options')}>&larr; Back</button>
           <h2 className="v3-edit-header">
             <span style={{ color: '#666', fontSize: '12px', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '8px', verticalAlign: 'middle' }}>Optional</span>
@@ -982,12 +982,12 @@ export function V4App() {
           </div>
         </div>
       ) : step === 'error' ? (
-        <div className="v3-error">
+        <div className="v3-app v3-error">
           <p>{errorMsg || 'Something failed. Check your API key and try again.'}</p>
           <button className="btn-primary" onClick={handleReset}>Try Again</button>
         </div>
       ) : step === 'results' && v2Data ? (
-        <div className="v3-results">
+        <div className="v3-app v3-results">
           <div className="v3-results-header">
             <h1>{question}</h1>
             <button className="btn-secondary" onClick={handleReset}>New Question</button>
