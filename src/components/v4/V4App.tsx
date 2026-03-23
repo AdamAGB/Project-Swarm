@@ -576,11 +576,11 @@ export function V4App() {
   return (
     <div>
       {!hasKey ? (
-        /* ---- Onboarding: split-screen layout ---- */
-        <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
+        /* ---- Onboarding: split-screen layout (Mint Fresh) ---- */
+        <div style={{ minHeight: '100vh', background: '#f2f8f6', display: 'flex', flexDirection: 'column' }}>
           {/* Top bar with title */}
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #1a1a1a' }}>
-            <span style={{ fontSize: '16px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #d8ece4', background: '#f4faf8' }}>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
           </div>
 
           {/* Main split content */}
@@ -591,13 +591,13 @@ export function V4App() {
           }}>
             {/* Left: copy + auth */}
             <div>
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6366f1', marginBottom: '14px', fontWeight: 600 }}>
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#059669', marginBottom: '14px', fontWeight: 600 }}>
                 Synthetic Audience Intelligence
               </div>
-              <h1 style={{ fontSize: '34px', fontWeight: 800, lineHeight: 1.15, marginBottom: '16px', color: '#fff' }}>
+              <h1 style={{ fontSize: '34px', fontWeight: 800, lineHeight: 1.15, marginBottom: '16px', color: '#0a1f18' }}>
                 Test any idea with<br />hundreds of AI voters.
               </h1>
-              <p style={{ fontSize: '15px', color: '#8892a6', lineHeight: 1.6, marginBottom: '28px' }}>
+              <p style={{ fontSize: '15px', color: '#3d6858', lineHeight: 1.6, marginBottom: '28px' }}>
                 Generate synthetic audiences across custom segments. See how different groups respond to your product names, taglines, concepts, and positioning — powered by GPT, Claude, and Gemini.
               </p>
 
@@ -607,23 +607,23 @@ export function V4App() {
                   onClick={() => { setDemoMode(true); setShowKeys(true); }}
                   style={{
                     flex: 1, padding: '14px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
-                    border: (demoMode && showKeys) ? '2px solid #4a9eff' : '1px solid #282828',
-                    background: (demoMode && showKeys) ? 'rgba(74, 158, 255, 0.06)' : '#111',
+                    border: (demoMode && showKeys) ? '2px solid #059669' : '1px solid #d8ece4',
+                    background: (demoMode && showKeys) ? '#e6f5ef' : '#ffffff',
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0e0e0', marginBottom: '3px' }}>Simple — Hosted</div>
-                  <div style={{ fontSize: '11px', color: '#666', lineHeight: 1.3 }}>Enter invite code</div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Simple — Hosted</div>
+                  <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>Enter invite code</div>
                 </button>
                 <button
                   onClick={() => { setDemoMode(false); setShowKeys(true); }}
                   style={{
                     flex: 1, padding: '14px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
-                    border: (!demoMode && showKeys) ? '2px solid #4a9eff' : '1px solid #282828',
-                    background: (!demoMode && showKeys) ? 'rgba(74, 158, 255, 0.06)' : '#111',
+                    border: (!demoMode && showKeys) ? '2px solid #059669' : '1px solid #d8ece4',
+                    background: (!demoMode && showKeys) ? '#e6f5ef' : '#ffffff',
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0e0e0', marginBottom: '3px' }}>Advanced — Own Keys</div>
-                  <div style={{ fontSize: '11px', color: '#666', lineHeight: 1.3 }}>Bring OpenAI, Claude, Gemini</div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Advanced — Own Keys</div>
+                  <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>Bring OpenAI, Claude, Gemini</div>
                 </button>
               </div>
 
@@ -642,21 +642,25 @@ export function V4App() {
                           autoFocus
                           style={{
                             flex: 1, padding: '10px 14px', fontSize: '14px',
-                            background: '#1a1a2e', borderRadius: '8px', color: '#ccc',
-                            border: inviteError ? '1px solid #e11d48' : inviteCode ? '1px solid #2a4a2a' : '1px solid #333',
+                            background: '#f6fbf9', borderRadius: '8px', color: '#0a1f18',
+                            border: inviteError ? '1px solid #dc2626' : inviteCode ? '1px solid #059669' : '1px solid #c8e0d6',
                           }}
                         />
                         <button
                           onClick={validateInviteCode}
                           disabled={!inviteCode.trim() || inviteLoading}
-                          className="btn-primary"
-                          style={{ padding: '10px 20px', fontSize: '14px', borderRadius: '8px', opacity: inviteLoading ? 0.6 : 1 }}
+                          style={{
+                            padding: '10px 20px', fontSize: '14px', fontWeight: 600,
+                            borderRadius: '8px', border: 'none', cursor: 'pointer',
+                            background: '#059669', color: '#fff',
+                            opacity: inviteLoading ? 0.6 : 1,
+                          }}
                         >
                           {inviteLoading ? '...' : 'Continue'}
                         </button>
                       </div>
                       {inviteError && (
-                        <p style={{ color: '#e11d48', fontSize: '12px', margin: '6px 0 0' }}>{inviteError}</p>
+                        <p style={{ color: '#dc2626', fontSize: '12px', margin: '6px 0 0' }}>{inviteError}</p>
                       )}
                     </div>
                   ) : (
@@ -668,21 +672,21 @@ export function V4App() {
                       ]).map(({ key: k, label, placeholder, url }) => (
                         <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <a href={url} target="_blank" rel="noopener noreferrer"
-                            style={{ color: '#999', fontSize: '12px', minWidth: '74px', textDecoration: 'none' }}>
+                            style={{ color: '#3d6858', fontSize: '12px', minWidth: '74px', textDecoration: 'none' }}>
                             {label} <span style={{ fontSize: '9px', opacity: 0.5 }}>↗</span>
                           </a>
                           <input type="password" value={keys[k]} onChange={(e) => saveKey(k, e.target.value)}
                             placeholder={placeholder}
                             style={{
                               flex: 1, padding: '8px 10px', fontSize: '12px',
-                              background: '#1a1a2e', borderRadius: '6px', color: '#ccc',
-                              border: keys[k] ? '1px solid #2a4a2a' : '1px solid #333',
+                              background: '#f6fbf9', borderRadius: '6px', color: '#0a1f18',
+                              border: keys[k] ? '1px solid #059669' : '1px solid #c8e0d6',
                             }}
                           />
-                          {keys[k] && <span style={{ color: '#4ade80', fontSize: '13px' }}>✓</span>}
+                          {keys[k] && <span style={{ color: '#059669', fontSize: '13px' }}>✓</span>}
                         </div>
                       ))}
-                      <p style={{ color: '#555', fontSize: '11px', margin: '2px 0 0' }}>
+                      <p style={{ color: '#7aaa98', fontSize: '11px', margin: '2px 0 0' }}>
                         At least one key required. More models = better results.
                       </p>
                     </div>
@@ -693,10 +697,11 @@ export function V4App() {
 
             {/* Right: live viz demo */}
             <div style={{
-              background: 'rgba(255,255,255,0.03)', borderRadius: '14px',
-              padding: '20px 12px', border: '1px solid rgba(255,255,255,0.06)',
+              background: '#ffffff', borderRadius: '14px',
+              padding: '20px 12px', border: '1px solid #d8ece4',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             }}>
-              <p style={{ textAlign: 'center', fontSize: '14px', color: '#9ca3af', marginBottom: '10px', fontStyle: 'italic' }}>
+              <p style={{ textAlign: 'center', fontSize: '14px', color: '#3d6858', marginBottom: '10px', fontStyle: 'italic' }}>
                 "What's the best gummy bear color?"
               </p>
               <VoteParticleViz
@@ -711,7 +716,7 @@ export function V4App() {
           <div style={{
             maxWidth: 1000, margin: '0 auto', padding: '40px 24px 48px',
             display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px',
-            borderTop: '1px solid #1a1a1a',
+            borderTop: '1px solid #d8ece4',
           }}>
             {[
               {
@@ -728,20 +733,20 @@ export function V4App() {
               },
             ].map((f) => (
               <div key={f.title}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#e0e0e0', marginBottom: '6px' }}>{f.title}</div>
-                <div style={{ fontSize: '13px', color: '#666', lineHeight: 1.5 }}>{f.desc}</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0a1f18', marginBottom: '6px' }}>{f.title}</div>
+                <div style={{ fontSize: '13px', color: '#3d6858', lineHeight: 1.5 }}>{f.desc}</div>
               </div>
             ))}
           </div>
         </div>
       ) : step === 'input' ? (
-        <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100vh', background: '#f2f8f6', display: 'flex', flexDirection: 'column' }}>
           {/* Header bar */}
           <div style={{
             padding: '12px 24px', display: 'flex', alignItems: 'center',
-            borderBottom: '1px solid #1a1a1a',
+            borderBottom: '1px solid #d8ece4', background: '#f4faf8',
           }}>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
             <div style={{ flex: 1 }} />
             <button
               onClick={() => {
@@ -753,7 +758,7 @@ export function V4App() {
                 window.location.reload();
               }}
               style={{
-                background: 'none', border: 'none', color: '#6366f1',
+                background: 'none', border: 'none', color: '#059669',
                 fontSize: '12px', cursor: 'pointer', padding: '4px 0',
               }}
             >
@@ -763,7 +768,7 @@ export function V4App() {
 
           {/* Centered input */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', marginTop: '-60px' }}>
-            <p style={{ fontSize: '20px', color: '#c8cdd5', fontWeight: 300, marginBottom: '20px' }}>
+            <p style={{ fontSize: '20px', color: '#0a1f18', fontWeight: 300, marginBottom: '20px' }}>
               Ask a question, poll your swarm
             </p>
             <div style={{ width: '100%', maxWidth: 600 }} className="v3-input-wrapper">
@@ -772,7 +777,7 @@ export function V4App() {
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="e.g. Which tagline resonates best for our rebrand?"
-                style={{ background: '#111318', border: '1px solid #252530', borderRadius: '10px', color: '#e0e0e0' }}
+                style={{ background: '#f6fbf9', border: '1px solid #c8e0d6', borderRadius: '10px', color: '#0a1f18' }}
               />
             <div
               className="v3-attachment-zone"
@@ -818,18 +823,26 @@ export function V4App() {
             )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'center' }}>
               <button
-                className="btn-primary"
                 disabled={!question.trim()}
                 onClick={handleAdvancedSubmit}
-                style={{ padding: '11px 28px', borderRadius: '8px', fontSize: '14px' }}
+                style={{
+                  padding: '11px 28px', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+                  border: 'none', cursor: 'pointer',
+                  background: '#059669', color: '#fff',
+                  opacity: question.trim() ? 1 : 0.5,
+                }}
               >
                 Add Poll
               </button>
               <button
-                className="btn-secondary"
                 disabled={!question.trim()}
                 onClick={handleSubmit}
-                style={{ padding: '11px 20px', borderRadius: '8px', fontSize: '14px' }}
+                style={{
+                  padding: '11px 20px', borderRadius: '8px', fontSize: '14px',
+                  border: '1px solid #c8e0d6', cursor: 'pointer',
+                  background: '#eaf5f0', color: '#0a1f18',
+                  opacity: question.trim() ? 1 : 0.5,
+                }}
               >
                 I'm Feeling Lucky
               </button>
