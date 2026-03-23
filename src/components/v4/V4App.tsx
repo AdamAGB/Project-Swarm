@@ -700,15 +700,21 @@ export function V4App() {
               background: '#ffffff', borderRadius: '14px',
               padding: '20px 12px', border: '1px solid #d8ece4',
               boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+              display: 'flex', flexDirection: 'column',
             }}>
-              <p style={{ textAlign: 'center', fontSize: '14px', color: '#3d6858', marginBottom: '10px', fontStyle: 'italic' }}>
-                "What's the best gummy bear color?"
+              <p style={{ textAlign: 'center', fontSize: '16px', fontWeight: 600, color: '#0a1f18', margin: '0 0 4px' }}>
+                What's the best gummy bear color?
               </p>
-              <VoteParticleViz
-                segmentVotes={heroMockData.segmentVotes}
-                aggregates={heroMockData.aggregates}
-                options={HERO_OPTIONS}
-              />
+              <p style={{ textAlign: 'center', fontSize: '12px', color: '#7aaa98', margin: '0 0 12px' }}>
+                200 voters
+              </p>
+              <div style={{ flex: 1 }}>
+                <VoteParticleViz
+                  segmentVotes={heroMockData.segmentVotes}
+                  aggregates={heroMockData.aggregates}
+                  options={HERO_OPTIONS}
+                />
+              </div>
             </div>
           </div>
 
