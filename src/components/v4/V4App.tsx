@@ -101,6 +101,11 @@ export function V4App() {
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
 
+  // BYOK mode
+  const [byokValidated, setByokValidated] = useState(() => localStorage.getItem('byok_validated') === 'true');
+  const [byokError, setByokError] = useState('');
+  const [byokLoading, setByokLoading] = useState(false);
+
   function saveInviteCode(code: string) {
     localStorage.setItem('invite_code', code);
     setInviteCode(code);
@@ -135,7 +140,35 @@ export function V4App() {
     setInviteLoading(false);
   }
 
-  const byokProviders = useMemo(() => getAvailableProviders(keys), [keys]);
+  async function validateByokKeys() {
+    const testProviders = getAvailableProviders(keys);
+    if (testProviders.length === 0) return;
+    setByokLoading(true);
+    setByokError('');
+    try {
+      const result = await testProviders[0].complete(
+        [{ role: 'user', content: 'test' }],
+        { maxTokens: 1 },
+      );
+      if (result !== null || result === null) {
+        // Any response (even null) means the key connected
+        setByokValidated(true);
+        localStorage.setItem('byok_validated', 'true');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Connection failed';
+      if (msg.includes('401') || msg.includes('invalid') || msg.includes('Unauthorized')) {
+        setByokError('Invalid API key. Check and try again.');
+      } else {
+        // Other errors (rate limit, etc.) mean the key is valid
+        setByokValidated(true);
+        localStorage.setItem('byok_validated', 'true');
+      }
+    }
+    setByokLoading(false);
+  }
+
+  const byokProviders = useMemo(() => byokValidated ? getAvailableProviders(keys) : [], [keys, byokValidated]);
   const demoProviders = useMemo(() => (demoValidated && inviteCode) ? getDemoProviders(inviteCode) : [], [demoValidated, inviteCode]);
   const providers = demoMode ? demoProviders : byokProviders;
   const hasKey = providers.length > 0;
@@ -690,9 +723,27 @@ export function V4App() {
                           {keys[k] && <span style={{ color: '#059669', fontSize: '13px' }}>✓</span>}
                         </div>
                       ))}
-                      <p style={{ color: '#7aaa98', fontSize: '11px', margin: '2px 0 0' }}>
-                        At least one key required. More models = better results.
-                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                        <button
+                          onClick={validateByokKeys}
+                          disabled={!keys.openai && !keys.anthropic && !keys.gemini || byokLoading}
+                          style={{
+                            padding: '10px 20px', fontSize: '14px', fontWeight: 600,
+                            borderRadius: '8px', border: 'none', cursor: 'pointer',
+                            background: (keys.openai || keys.anthropic || keys.gemini) ? '#059669' : '#c8e0d6',
+                            color: '#fff',
+                            opacity: byokLoading ? 0.6 : 1,
+                          }}
+                        >
+                          {byokLoading ? 'Validating...' : 'Continue'}
+                        </button>
+                        <span style={{ color: '#7aaa98', fontSize: '11px' }}>
+                          At least one key required
+                        </span>
+                      </div>
+                      {byokError && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', margin: '6px 0 0' }}>{byokError}</p>
+                      )}
                     </div>
                   )}
                 </div>
