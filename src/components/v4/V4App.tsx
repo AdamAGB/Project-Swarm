@@ -18,6 +18,7 @@ import { isAcceptedFile, readFileAsAttachment, ACCEPTED_FILE_TYPES } from '../..
 import '../../App.css';
 import '../v2/V2App.css';
 import '../v3/V3App.css';
+import './V4App.css';
 
 type Step = 'input' | 'loading' | 'edit-options' | 'edit-segments' | 'results' | 'error';
 
@@ -617,11 +618,7 @@ export function V4App() {
           </div>
 
           {/* Main split content */}
-          <div style={{
-            flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px',
-            maxWidth: 1000, margin: '0 auto', width: '100%', padding: '48px 24px',
-            alignItems: 'center',
-          }}>
+          <div className="v4-onboarding-grid" style={{ flex: 1 }}>
             {/* Left: copy + auth */}
             <div>
               <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#059669', marginBottom: '14px', fontWeight: 600 }}>
@@ -773,11 +770,7 @@ export function V4App() {
           </div>
 
           {/* Bottom: feature highlights */}
-          <div style={{
-            maxWidth: 1000, margin: '0 auto', padding: '40px 24px 48px',
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px',
-            borderTop: '1px solid #d8ece4',
-          }}>
+          <div className="v4-features-grid" style={{ borderTop: '1px solid #d8ece4' }}>
             {[
               {
                 title: 'Multi-Model Ensemble',
