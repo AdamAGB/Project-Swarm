@@ -768,7 +768,7 @@ export function V4App() {
                 fontSize: '12px', cursor: 'pointer', padding: '4px 0',
               }}
             >
-              {demoMode ? 'Hosted mode' : `${providers.length} model${providers.length > 1 ? 's' : ''}`} — change
+              Log Out
             </button>
           </div>
 
