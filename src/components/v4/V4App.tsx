@@ -75,16 +75,48 @@ export function V4App() {
   }
 
   // Demo mode
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(() => localStorage.getItem('demo_validated') === 'true');
+  const [demoValidated, setDemoValidated] = useState(() => localStorage.getItem('demo_validated') === 'true');
   const [inviteCode, setInviteCode] = useState(() => localStorage.getItem('invite_code') ?? '');
+  const [inviteError, setInviteError] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   function saveInviteCode(code: string) {
     localStorage.setItem('invite_code', code);
     setInviteCode(code);
+    setInviteError('');
+  }
+
+  async function validateInviteCode() {
+    if (!inviteCode.trim()) return;
+    setInviteLoading(true);
+    setInviteError('');
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inviteCode: inviteCode.trim(),
+          provider: 'openai',
+          messages: [{ role: 'user', content: 'test' }],
+          maxTokens: 1,
+        }),
+      });
+      if (res.status === 403) {
+        setInviteError('Invalid invite code');
+      } else {
+        // Any other response (200, 429, 502) means the code is valid
+        setDemoValidated(true);
+        localStorage.setItem('demo_validated', 'true');
+      }
+    } catch {
+      setInviteError('Could not validate. Try again.');
+    }
+    setInviteLoading(false);
   }
 
   const byokProviders = useMemo(() => getAvailableProviders(keys), [keys]);
-  const demoProviders = useMemo(() => inviteCode ? getDemoProviders(inviteCode) : [], [inviteCode]);
+  const demoProviders = useMemo(() => (demoValidated && inviteCode) ? getDemoProviders(inviteCode) : [], [demoValidated, inviteCode]);
   const providers = demoMode ? demoProviders : byokProviders;
   const hasKey = providers.length > 0;
 
@@ -583,16 +615,32 @@ export function V4App() {
                       type="text"
                       value={inviteCode}
                       onChange={(e) => saveInviteCode(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') validateInviteCode(); }}
                       placeholder="Enter invite code"
                       autoFocus
                       style={{
                         flex: 1, padding: '10px 14px', fontSize: '14px',
                         background: '#1a1a2e', borderRadius: '8px', color: '#ccc',
-                        border: inviteCode ? '1px solid #2a4a2a' : '1px solid #333',
+                        border: inviteError ? '1px solid #e11d48' : inviteCode ? '1px solid #2a4a2a' : '1px solid #333',
                       }}
                     />
-                    {inviteCode && <span style={{ color: '#4ade80', fontSize: '16px' }}>✓</span>}
+                    <button
+                      onClick={validateInviteCode}
+                      disabled={!inviteCode.trim() || inviteLoading}
+                      style={{
+                        padding: '10px 20px', fontSize: '14px', fontWeight: 600,
+                        borderRadius: '8px', cursor: 'pointer', border: 'none',
+                        background: inviteCode.trim() ? '#4a9eff' : '#333',
+                        color: inviteCode.trim() ? '#fff' : '#666',
+                        opacity: inviteLoading ? 0.6 : 1,
+                      }}
+                    >
+                      {inviteLoading ? '...' : 'Continue'}
+                    </button>
                   </div>
+                  {inviteError && (
+                    <p style={{ color: '#e11d48', fontSize: '12px', margin: '6px 0 0' }}>{inviteError}</p>
+                  )}
                   <p style={{ color: '#555', fontSize: '12px', margin: '8px 0 0' }}>
                     Uses 3 AI models for diverse results. Rate limited to prevent abuse.
                   </p>
@@ -645,11 +693,13 @@ export function V4App() {
                 setKeys({ openai: '', anthropic: '', gemini: '' });
                 setInviteCode('');
                 setDemoMode(false);
+                setDemoValidated(false);
                 setShowKeys(false);
                 localStorage.removeItem('openai_api_key');
                 localStorage.removeItem('anthropic_api_key');
                 localStorage.removeItem('gemini_api_key');
                 localStorage.removeItem('invite_code');
+                localStorage.removeItem('demo_validated');
               }}
               style={{
                 background: 'none', border: 'none', color: '#555',
