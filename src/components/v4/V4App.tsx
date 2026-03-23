@@ -706,7 +706,7 @@ export function V4App() {
                 fontSize: '12px', cursor: 'pointer', padding: '4px 0',
               }}
             >
-              {demoMode ? 'Demo mode' : `${providers.length} model${providers.length > 1 ? 's' : ''}`} — change
+              {demoMode ? 'Hosted mode' : `${providers.length} model${providers.length > 1 ? 's' : ''}`} — change
             </button>
           </div>
           <h1 className="v3-title">Project Swarm</h1>
