@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, Fragment } from 'react';
 import { generateOptionsExpanded } from '../../services/option-generator';
 import { generateSegmentsAndVariables } from '../../services/segment-generator';
-import { getAvailableProviders } from '../../services/llm-providers';
+import { getAvailableProviders, getDemoProviders } from '../../services/llm-providers';
 import { generateOptionsMultiModel, generatePriorMultiModel, runMultiModelVoting } from '../../services/multi-model';
 import type { PersonaVoteResult, PersonaVote } from '../../services/persona-vote-engine';
 import { createOpenAIClient } from '../../services/openai';
@@ -61,6 +61,7 @@ function toV2VoteData(result: PersonaVoteResult): {
 
 export function V4App() {
   // Multi-model API keys
+  // API key mode
   const [keys, setKeys] = useState<{ openai: string; anthropic: string; gemini: string }>(() => ({
     openai: localStorage.getItem('openai_api_key') ?? '',
     anthropic: localStorage.getItem('anthropic_api_key') ?? '',
@@ -73,7 +74,18 @@ export function V4App() {
     setKeys((prev) => ({ ...prev, [provider]: value }));
   }
 
-  const providers = useMemo(() => getAvailableProviders(keys), [keys]);
+  // Demo mode
+  const [demoMode, setDemoMode] = useState(false);
+  const [inviteCode, setInviteCode] = useState(() => localStorage.getItem('invite_code') ?? '');
+
+  function saveInviteCode(code: string) {
+    localStorage.setItem('invite_code', code);
+    setInviteCode(code);
+  }
+
+  const byokProviders = useMemo(() => getAvailableProviders(keys), [keys]);
+  const demoProviders = useMemo(() => inviteCode ? getDemoProviders(inviteCode) : [], [inviteCode]);
+  const providers = demoMode ? demoProviders : byokProviders;
   const hasKey = providers.length > 0;
 
   const [step, setStep] = useState<Step>('input');
@@ -517,49 +529,106 @@ export function V4App() {
           style={{
             background: 'none',
             border: 'none',
-            color: providers.length > 0 ? '#4a9eff' : '#e11d48',
+            color: hasKey ? '#4a9eff' : '#e11d48',
             cursor: 'pointer',
             fontSize: '13px',
             padding: '4px 0',
           }}
         >
-          {providers.length > 0
-            ? `${providers.length} model${providers.length > 1 ? 's' : ''} connected (${providers.map((p) => p.name).join(', ')})`
-            : 'Add API keys to get started'}
+          {hasKey
+            ? demoMode
+              ? 'Demo mode (3 models)'
+              : `${providers.length} model${providers.length > 1 ? 's' : ''} connected (${providers.map((p) => p.name).join(', ')})`
+            : 'Set up access to get started'}
           {showKeys ? ' \u25B2' : ' \u25BC'}
         </button>
         {showKeys && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', maxWidth: '400px' }}>
-            {([
-              { key: 'openai' as const, label: 'OpenAI', placeholder: 'sk-...' },
-              { key: 'anthropic' as const, label: 'Anthropic', placeholder: 'sk-ant-...' },
-              { key: 'gemini' as const, label: 'Gemini', placeholder: 'AI...' },
-            ]).map(({ key: k, label, placeholder }) => (
-              <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ color: '#888', fontSize: '12px', minWidth: '70px' }}>{label}</label>
-                <input
-                  type="password"
-                  value={keys[k]}
-                  onChange={(e) => saveKey(k, e.target.value)}
-                  placeholder={placeholder}
-                  style={{
-                    flex: 1,
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    background: '#1a1a2e',
-                    border: keys[k] ? '1px solid #2a4a2a' : '1px solid #333',
-                    borderRadius: '4px',
-                    color: '#ccc',
-                  }}
-                />
-                {keys[k] && (
-                  <span style={{ color: '#4ade80', fontSize: '12px' }}>✓</span>
-                )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', maxWidth: '420px' }}>
+            {/* Mode toggle */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setDemoMode(false)}
+                style={{
+                  padding: '5px 14px', fontSize: '12px', borderRadius: '6px', cursor: 'pointer',
+                  border: !demoMode ? '1px solid #4a9eff' : '1px solid #444',
+                  background: !demoMode ? 'rgba(74, 158, 255, 0.15)' : 'transparent',
+                  color: !demoMode ? '#4a9eff' : '#aaa',
+                }}
+              >
+                Use my API keys
+              </button>
+              <button
+                onClick={() => setDemoMode(true)}
+                style={{
+                  padding: '5px 14px', fontSize: '12px', borderRadius: '6px', cursor: 'pointer',
+                  border: demoMode ? '1px solid #4a9eff' : '1px solid #444',
+                  background: demoMode ? 'rgba(74, 158, 255, 0.15)' : 'transparent',
+                  color: demoMode ? '#4a9eff' : '#aaa',
+                }}
+              >
+                Try demo
+              </button>
+            </div>
+
+            {demoMode ? (
+              /* Demo mode — invite code */
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label style={{ color: '#888', fontSize: '12px', minWidth: '80px' }}>Invite code</label>
+                  <input
+                    type="text"
+                    value={inviteCode}
+                    onChange={(e) => saveInviteCode(e.target.value)}
+                    placeholder="Enter invite code"
+                    style={{
+                      flex: 1, padding: '5px 8px', fontSize: '12px',
+                      background: '#1a1a2e', borderRadius: '4px', color: '#ccc',
+                      border: inviteCode ? '1px solid #2a4a2a' : '1px solid #333',
+                    }}
+                  />
+                  {inviteCode && <span style={{ color: '#4ade80', fontSize: '12px' }}>✓</span>}
+                </div>
+                <p style={{ color: '#555', fontSize: '11px', margin: '6px 0 0' }}>
+                  Demo uses all 3 models (OpenAI, Claude, Gemini). Rate limited.
+                </p>
               </div>
-            ))}
-            <p style={{ color: '#555', fontSize: '11px', margin: '4px 0 0' }}>
-              At least one key required. More models = more diverse results.
-            </p>
+            ) : (
+              /* BYOK mode — individual API keys */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {([
+                  { key: 'openai' as const, label: 'OpenAI', placeholder: 'sk-...', url: 'https://platform.openai.com/api-keys' },
+                  { key: 'anthropic' as const, label: 'Anthropic', placeholder: 'sk-ant-...', url: 'https://console.anthropic.com/settings/keys' },
+                  { key: 'gemini' as const, label: 'Gemini', placeholder: 'AI...', url: 'https://aistudio.google.com/apikey' },
+                ]).map(({ key: k, label, placeholder, url }) => (
+                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#888', fontSize: '12px', minWidth: '70px', textDecoration: 'none' }}
+                      title={`Get ${label} API key`}
+                    >
+                      {label} <span style={{ fontSize: '10px' }}>↗</span>
+                    </a>
+                    <input
+                      type="password"
+                      value={keys[k]}
+                      onChange={(e) => saveKey(k, e.target.value)}
+                      placeholder={placeholder}
+                      style={{
+                        flex: 1, padding: '4px 8px', fontSize: '12px',
+                        background: '#1a1a2e', borderRadius: '4px', color: '#ccc',
+                        border: keys[k] ? '1px solid #2a4a2a' : '1px solid #333',
+                      }}
+                    />
+                    {keys[k] && <span style={{ color: '#4ade80', fontSize: '12px' }}>✓</span>}
+                  </div>
+                ))}
+                <p style={{ color: '#555', fontSize: '11px', margin: '4px 0 0' }}>
+                  At least one key required. More models = more diverse results.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -145,6 +145,46 @@ export function createGeminiProvider(apiKey: string, model = 'gemini-2.5-flash')
 /* ------------------------------------------------------------------ */
 
 /** Get all available providers from the keys the user has entered */
+/* ------------------------------------------------------------------ */
+/*  Demo mode (proxied through Vercel API route)                       */
+/* ------------------------------------------------------------------ */
+
+function createDemoProvider(inviteCode: string, providerName: 'openai' | 'anthropic' | 'gemini', displayName: string): LLMProvider {
+  return {
+    name: displayName,
+    async complete(messages, options = {}) {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inviteCode,
+          provider: providerName,
+          messages,
+          temperature: options.temperature,
+          jsonMode: options.jsonMode,
+          maxTokens: options.maxTokens,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || `Demo proxy ${res.status}`);
+      }
+      const data = await res.json();
+      return data.content ?? null;
+    },
+  };
+}
+
+/** Get providers for demo mode (using invite code through server proxy) */
+export function getDemoProviders(inviteCode: string): LLMProvider[] {
+  return [
+    createDemoProvider(inviteCode, 'openai', 'OpenAI'),
+    createDemoProvider(inviteCode, 'anthropic', 'Claude'),
+    createDemoProvider(inviteCode, 'gemini', 'Gemini'),
+  ];
+}
+
+/** Get all available providers from the keys the user has entered */
 export function getAvailableProviders(keys: {
   openai?: string;
   anthropic?: string;
