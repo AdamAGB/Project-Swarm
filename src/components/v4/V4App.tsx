@@ -1065,30 +1065,7 @@ export function V4App() {
             </div>
           )}
 
-          {prior && (
-            <details className="v3-prior-debug" style={{ margin: '16px 0', padding: '12px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#aaa' }}>
-                Prior Debug — confidence: {prior.confidence.toFixed(2)} — pseudo-votes: {Math.round(prior.confidence * 50)}
-              </summary>
-              <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', color: '#ccc' }}>
-                {options.map((opt) => (
-                  <Fragment key={opt}>
-                    <span>{opt}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        height: '8px',
-                        width: `${(prior.distribution[opt] ?? 0) * 100 * 3}px`,
-                        background: '#4a9eff',
-                        borderRadius: '4px',
-                        minWidth: '2px',
-                      }} />
-                      <span>{((prior.distribution[opt] ?? 0) * 100).toFixed(1)}%</span>
-                    </div>
-                  </Fragment>
-                ))}
-              </div>
-            </details>
-          )}
+          {/* Prior debug hidden — enable by setting showPriorDebug */}
 
           {voteResult && voteResult.writeInClusters.length > 0 && (
             <div style={{ margin: '20px 0', padding: '16px', background: '#1a1a2e', borderRadius: '10px' }}>
