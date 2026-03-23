@@ -274,11 +274,7 @@ Return JSON: { "votes": [{ "name": "First name", "desc": "Age, occupation", "dis
         for (const opt of options) distribution[opt] = 1 / options.length;
       }
 
-      // Use the persona's highest-probability option as their vote
-      // This ensures the vote matches the reason they gave
-      const vote = options.reduce((best, opt) =>
-        (distribution[opt] ?? 0) > (distribution[best] ?? 0) ? opt : best,
-      );
+      const vote = sampleFromDistribution(distribution, options);
 
       const rawWriteIn = v.write_in ?? v.writeIn ?? null;
       let writeIn: string | null = null;
