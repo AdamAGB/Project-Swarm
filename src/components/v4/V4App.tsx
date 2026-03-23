@@ -751,6 +751,7 @@ export function V4App() {
           <div style={{
             padding: '12px 24px', display: 'flex', alignItems: 'center',
             borderBottom: '1px solid #d8ece4', background: '#f4faf8',
+            position: 'relative', zIndex: 10,
           }}>
             <span style={{ fontSize: '15px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
             <div style={{ flex: 1 }} />
