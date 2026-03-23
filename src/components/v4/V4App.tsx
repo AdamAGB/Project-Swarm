@@ -628,10 +628,10 @@ export function V4App() {
                 Synthetic Audience Intelligence
               </div>
               <h1 style={{ fontSize: '34px', fontWeight: 800, lineHeight: 1.15, marginBottom: '16px', color: '#0a1f18' }}>
-                Poll hundreds of AI voters<br />on any topic.
+                Skip the survey.<br />Poll your swarm.
               </h1>
               <p style={{ fontSize: '15px', color: '#3d6858', lineHeight: 1.6, marginBottom: '28px' }}>
-                Generate synthetic audiences across custom segments. See how different groups respond to your questions, product names, taglines, documents, concepts, and positioning.
+                Hundreds of AI-generated voters across custom audience segments, voting on your question with real reasoning. Results in 30 seconds, not 30 days.
               </p>
 
               <p style={{ fontSize: '13px', color: '#7aaa98', marginBottom: '10px' }}>
