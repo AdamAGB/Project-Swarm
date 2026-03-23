@@ -261,6 +261,7 @@ async function fetchVoteBatch(
 
       return {
         name: String(v.name ?? 'Anonymous'),
+        description: String(v.desc ?? v.description ?? ''),
         segment: segment?.name ?? 'General',
         vote,
         reason: String(v.reason ?? ''),
