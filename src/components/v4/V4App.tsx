@@ -628,10 +628,10 @@ export function V4App() {
                 Synthetic Audience Intelligence
               </div>
               <h1 style={{ fontSize: '34px', fontWeight: 800, lineHeight: 1.15, marginBottom: '16px', color: '#0a1f18' }}>
-                Skip the survey.<br />Poll your swarm.
+                Poll your AI swarm.
               </h1>
               <p style={{ fontSize: '15px', color: '#3d6858', lineHeight: 1.6, marginBottom: '28px' }}>
-                Hundreds of AI-generated voters across custom audience segments, voting on your question with real reasoning. Results in 30 seconds, not 30 days.
+                Skip the survey. Ask hundreds of AI personas your question and have them vote using the wisdom of three different LLM models. Define custom segments, upload files, and get better answers.
               </p>
 
               <p style={{ fontSize: '13px', color: '#7aaa98', marginBottom: '10px' }}>
@@ -648,7 +648,7 @@ export function V4App() {
                     background: (demoMode && showKeys) ? '#e6f5ef' : '#ffffff',
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Simple — Hosted <span style={{ fontSize: '11px' }}>&#8250;</span></div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Simple: Hosted <span style={{ fontSize: '11px' }}>&#8250;</span></div>
                   <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>Enter invite code</div>
                 </button>
                 <button
@@ -659,7 +659,7 @@ export function V4App() {
                     background: (!demoMode && showKeys) ? '#e6f5ef' : '#ffffff',
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Advanced — Own Keys <span style={{ fontSize: '11px' }}>&#8250;</span></div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Advanced: Your API Keys <span style={{ fontSize: '11px' }}>&#8250;</span></div>
                   <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>Bring OpenAI, Claude, Gemini</div>
                 </button>
               </div>
