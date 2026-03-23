@@ -838,7 +838,7 @@ export function V4App() {
                   opacity: question.trim() ? 1 : 0.5,
                 }}
               >
-                Add Poll
+                Choose Options
               </button>
               <button
                 disabled={!question.trim()}
