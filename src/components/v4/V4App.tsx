@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, Fragment } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { generateOptionsExpanded } from '../../services/option-generator';
 import { generateSegmentsAndVariables } from '../../services/segment-generator';
 import { getAvailableProviders, getDemoProviders } from '../../services/llm-providers';
@@ -146,7 +146,7 @@ export function V4App() {
   const [progressLabel, setProgressLabel] = useState('');
   const [voteResult, setVoteResult] = useState<PersonaVoteResult | null>(null);
   const [resultKey, setResultKey] = useState(0);
-  const [prior, setPrior] = useState<PriorResult | null>(null);
+  const [, setPrior] = useState<PriorResult | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
   const [, setAdvanced] = useState(false);
