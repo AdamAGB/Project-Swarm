@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import { V4App } from './components/v4/V4App';
 import { VizDemo } from './components/viz/VizDemo';
+import { HomepageDemo } from './components/viz/HomepageDemo';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -11,6 +12,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<V4App />} />
         <Route path="/viz" element={<VizDemo />} />
+        <Route path="/homepage" element={<HomepageDemo />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
