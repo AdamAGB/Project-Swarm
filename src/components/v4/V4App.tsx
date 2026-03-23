@@ -750,6 +750,7 @@ export function V4App() {
                 setDemoMode(false);
                 setDemoValidated(false);
                 setShowKeys(false);
+                setStep('input');
                 localStorage.removeItem('openai_api_key');
                 localStorage.removeItem('anthropic_api_key');
                 localStorage.removeItem('gemini_api_key');
