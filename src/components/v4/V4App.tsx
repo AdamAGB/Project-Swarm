@@ -735,9 +735,14 @@ export function V4App() {
           </div>
         </div>
       ) : step === 'input' ? (
-        <div className="v3-input-screen" style={{ background: '#09090f' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span style={{ fontSize: '16px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+        <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
+          {/* Header bar */}
+          <div style={{
+            padding: '12px 24px', display: 'flex', alignItems: 'center',
+            borderBottom: '1px solid #1a1a1a',
+          }}>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+            <div style={{ flex: 1 }} />
             <button
               onClick={() => {
                 setKeys({ openai: '', anthropic: '', gemini: '' });
@@ -752,21 +757,28 @@ export function V4App() {
                 localStorage.removeItem('demo_validated');
               }}
               style={{
-                background: 'none', border: 'none', color: '#555',
+                background: 'none', border: 'none', color: '#6366f1',
                 fontSize: '12px', cursor: 'pointer', padding: '4px 0',
               }}
             >
               {demoMode ? 'Hosted mode' : `${providers.length} model${providers.length > 1 ? 's' : ''}`} — change
             </button>
           </div>
-          <div className="v3-input-wrapper">
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask your question and poll your swarm"
-              autoFocus
-            />
+
+          {/* Centered input */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', marginTop: '-60px' }}>
+            <p style={{ fontSize: '20px', color: '#c8cdd5', fontWeight: 300, marginBottom: '20px' }}>
+              Ask a question, poll your swarm
+            </p>
+            <div style={{ width: '100%', maxWidth: 600 }} className="v3-input-wrapper">
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="e.g. Which tagline resonates best for our rebrand?"
+                autoFocus
+                style={{ background: '#111318', border: '1px solid #252530', borderRadius: '10px', color: '#e0e0e0' }}
+              />
             <div
               className="v3-attachment-zone"
               onClick={() => fileInputRef.current?.click()}
@@ -809,20 +821,25 @@ export function V4App() {
                 ))}
               </div>
             )}
-            <button
-              className="btn-primary"
-              disabled={!question.trim()}
-              onClick={handleAdvancedSubmit}
-            >
-              Begin Simulation
-            </button>
-            <button
-              className="btn-secondary"
-              disabled={!question.trim()}
-              onClick={handleSubmit}
-            >
-              I'm Feeling Lucky
-            </button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'center' }}>
+              <button
+                className="btn-primary"
+                disabled={!question.trim()}
+                onClick={handleAdvancedSubmit}
+                style={{ padding: '11px 28px', borderRadius: '8px', fontSize: '14px' }}
+              >
+                Begin Simulation
+              </button>
+              <button
+                className="btn-secondary"
+                disabled={!question.trim()}
+                onClick={handleSubmit}
+                style={{ padding: '11px 20px', borderRadius: '8px', fontSize: '14px' }}
+              >
+                I'm Feeling Lucky
+              </button>
+            </div>
+          </div>
           </div>
         </div>
       ) : step === 'loading' ? (
