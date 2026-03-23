@@ -735,11 +735,11 @@ export function V4App() {
           </div>
         </div>
       ) : step === 'input' ? (
-        <div className="v3-input-screen">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+        <div className="v3-input-screen" style={{ background: '#09090f' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
             <button
               onClick={() => {
-                // Clear keys to go back to onboarding
                 setKeys({ openai: '', anthropic: '', gemini: '' });
                 setInviteCode('');
                 setDemoMode(false);
@@ -759,14 +759,12 @@ export function V4App() {
               {demoMode ? 'Hosted mode' : `${providers.length} model${providers.length > 1 ? 's' : ''}`} — change
             </button>
           </div>
-          <h1 className="v3-title">Project Swarm</h1>
-          <p className="v3-subtitle">Generate hundreds of synthetic AI voters with custom segments to poll on any question. Deeper, more tailored insights.</p>
           <div className="v3-input-wrapper">
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask a question..."
+              placeholder="Ask your question and poll your swarm"
               autoFocus
             />
             <div
