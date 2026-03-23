@@ -15,6 +15,7 @@ import type {
 } from '../../types/v2';
 import type { Attachment } from '../../types/attachments';
 import { isAcceptedFile, readFileAsAttachment, ACCEPTED_FILE_TYPES } from '../../services/attachments';
+import '../../App.css';
 import '../v2/V2App.css';
 import '../v3/V3App.css';
 
