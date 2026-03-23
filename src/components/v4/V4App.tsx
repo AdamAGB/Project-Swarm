@@ -1167,7 +1167,7 @@ export function V4App() {
                         style={{ animationDelay: `${(segIdx * 6 + i) * 0.05}s` }}
                       >
                         <div className="v3-persona-header">
-                          <span className="v3-persona-name">{p.name}</span>
+                          <span className="v3-persona-name">{p.name}{p.description && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: '6px', fontSize: '12px' }}>{p.description}</span>}</span>
                           <span className="v3-persona-vote-pill">{p.vote}</span>
                         </div>
                         <p className="v3-persona-comment">{p.reason}</p>

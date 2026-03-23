@@ -226,14 +226,15 @@ Rules:
 - Generate exactly ${count} personas
 - Each persona provides a probability distribution over ALL options (values must sum to 1.0, use EXACT option text as keys)
 - A persona who strongly prefers one option might be 0.8/0.1/0.1. Someone torn might be 0.4/0.35/0.25. Someone who'd never pick an option should give it 0.0 or near-zero.
-- Vary the names, personalities, and reasoning
+- Each persona gets a short "desc" (age and occupation, 5 words max, e.g. "34, marketing manager" or "22, college student")
+- Vary the names, ages, occupations, and reasoning
 - Be honest: if most people would reject an option, most personas should give it low probability
 - Include diverse opinions — real groups are never unanimous
 - Reasons should explain their top preference, 1 sentence, first-person, natural and conversational
 - Do NOT start every reason with "I"
 - Every persona MUST provide a write_in: a short, concrete suggestion (2-5 words) for a specific option they wish was on the list, or "nothing" if they're happy with the options. It should be a real, nameable thing — not an abstract description or theme.
 
-Return JSON: { "votes": [{ "name": "First name", "distribution": { ${optionKeys}: probability, ... }, "reason": "Their reasoning", "write_in": "Short suggestion or null" }, ...] }`;
+Return JSON: { "votes": [{ "name": "First name", "desc": "Age, occupation", "distribution": { ${optionKeys}: probability, ... }, "reason": "Their reasoning", "write_in": "Short suggestion or null" }, ...] }`;
 
   const user = segment
     ? `Question: "${question}"\nOptions:\n${shuffled.map((o, i) => `${i + 1}. ${o}`).join('\n')}\n\nGenerate ${count} voters from the "${segment.name}" segment.`
@@ -288,6 +289,7 @@ Return JSON: { "votes": [{ "name": "First name", "distribution": { ${optionKeys}
 
       return {
         name: String(v.name ?? 'Anonymous'),
+        description: String(v.desc ?? v.description ?? ''),
         segment: segment?.name ?? 'General',
         vote,
         reason: String(v.reason ?? ''),

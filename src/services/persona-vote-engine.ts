@@ -7,6 +7,7 @@ import type { PriorResult } from '../types/v2';
 
 export interface PersonaVote {
   name: string;
+  description: string;
   segment: string;
   vote: string;
   reason: string;
