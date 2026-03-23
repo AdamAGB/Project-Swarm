@@ -566,8 +566,8 @@ export function V4App() {
 
       {!hasKey ? null : step === 'input' ? (
         <div className="v3-input-screen">
-          <h1 className="v3-title">Poll Simulator</h1>
-          <p className="v3-subtitle">Type a question and see how people would vote</p>
+          <h1 className="v3-title">Project Swarm</h1>
+          <p className="v3-subtitle">Generate hundreds of synthetic AI voters to answer your question</p>
           <div className="v3-input-wrapper">
             <textarea
               value={question}
