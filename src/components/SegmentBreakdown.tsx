@@ -1,13 +1,15 @@
 import type { SegmentAnalysis } from '../types';
 import { ARCHETYPE_COLORS } from '../types/persona';
+import type { QuestionFramework } from '../types/poll';
 
-const ARCHETYPE_COLOR_MAP: Record<string, string> = {
-  'Budget Conscious Pragmatist': ARCHETYPE_COLORS.budget_conscious_pragmatist,
-  'Premium Curious Trend Seeker': ARCHETYPE_COLORS.premium_curious_trend_seeker,
-  'Brand Loyal Mainstream Buyer': ARCHETYPE_COLORS.brand_loyal_mainstream_buyer,
-  'Health-Focused Skeptic': ARCHETYPE_COLORS.health_focused_skeptic,
-  'Convenience-First Shopper': ARCHETYPE_COLORS.convenience_first_shopper,
-};
+// Stable positional color array matching archetype iteration order
+const ARCHETYPE_COLOR_LIST = [
+  ARCHETYPE_COLORS.budget_conscious_pragmatist,
+  ARCHETYPE_COLORS.premium_curious_trend_seeker,
+  ARCHETYPE_COLORS.brand_loyal_mainstream_buyer,
+  ARCHETYPE_COLORS.health_focused_skeptic,
+  ARCHETYPE_COLORS.convenience_first_shopper,
+];
 
 const CUSTOM_SEGMENT_COLORS = [
   '#0ea5e9', '#f97316', '#a855f7', '#14b8a6', '#e11d48', '#84cc16',
@@ -16,6 +18,7 @@ const CUSTOM_SEGMENT_COLORS = [
 interface Props {
   segments: SegmentAnalysis;
   options: string[];
+  framework?: QuestionFramework;
 }
 
 const OPTION_COLORS = [
@@ -79,8 +82,8 @@ export function SegmentBreakdown({ segments, options }: Props) {
       <div className="segment-group">
         <h3 className="segment-group-title">By Archetype</h3>
         <div className="segment-table">
-          {segments.byArchetype.map((seg) => {
-            const archColor = ARCHETYPE_COLOR_MAP[seg.segmentValue] || '#6b7280';
+          {segments.byArchetype.map((seg, idx) => {
+            const archColor = ARCHETYPE_COLOR_LIST[idx % ARCHETYPE_COLOR_LIST.length] || '#6b7280';
             return (
               <div key={seg.segmentValue} className="segment-row">
                 <div className="segment-label">
@@ -126,7 +129,7 @@ export function SegmentBreakdown({ segments, options }: Props) {
 
       {/* By Trait - show selected highlights */}
       <div className="segment-group">
-        <h3 className="segment-group-title">By Consumer Trait</h3>
+        <h3 className="segment-group-title">By Personality Trait</h3>
         <div className="segment-table">
           {segments.byTrait
             .filter((seg) => seg.totalInSegment >= 15)

@@ -1,8 +1,8 @@
-import type { NumericTraitKey, OptionDimension } from '../types';
+import type { NumericTraitKey } from '../types';
 
 export type WeightEntry = [NumericTraitKey, number];
 
-export const TRAIT_WEIGHT_MATRIX: Record<OptionDimension, WeightEntry[]> = {
+export const DEFAULT_TRAIT_WEIGHT_MATRIX: Record<string, WeightEntry[]> = {
   category_fit: [
     ['attention_level', 0.4],
     ['research_depth', 0.3],
@@ -77,9 +77,13 @@ export const TRAIT_WEIGHT_MATRIX: Record<OptionDimension, WeightEntry[]> = {
 
 // Baseline weights — every persona has some minimum care about these dimensions
 // even if their specific traits don't strongly activate them
-export const BASELINE_WEIGHTS: Partial<Record<OptionDimension, number>> = {
+export const DEFAULT_BASELINE_WEIGHTS: Record<string, number> = {
   category_fit: 0.15,
   clarity: 0.10,
   trustworthiness: 0.08,
   safety_mismatch: -0.12,
 };
+
+// Backward compat aliases
+export const TRAIT_WEIGHT_MATRIX = DEFAULT_TRAIT_WEIGHT_MATRIX;
+export const BASELINE_WEIGHTS = DEFAULT_BASELINE_WEIGHTS;

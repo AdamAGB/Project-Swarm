@@ -1,5 +1,5 @@
 import type { Persona, PersonaTraits, Archetype, NumericTraitKey } from '../types';
-import type { SegmentTraitOverrides } from '../types/poll';
+import type { SegmentTraitOverrides, QuestionFramework } from '../types/poll';
 import { SeededRandom } from './seeded-random';
 import { ARCHETYPE_DISTRIBUTION, ARCHETYPE_TRAIT_PROFILES } from '../data/archetype-profiles';
 import {
@@ -53,6 +53,7 @@ export function generatePersonas(
   count: number = 500,
   seed?: number,
   segmentConfig?: SegmentConfig,
+  framework?: QuestionFramework,
 ): Persona[] {
   const rng = new SeededRandom(seed ?? Date.now());
   const personas: Persona[] = [];
@@ -68,14 +69,14 @@ export function generatePersonas(
       const segCount = segmentCounts[s];
 
       for (let i = 0; i < segCount; i++) {
-        const persona = generateSinglePersona(rng, personaId, usedNames, override);
+        const persona = generateSinglePersona(rng, personaId, usedNames, override, framework);
         personas.push(persona);
         personaId++;
       }
     }
   } else {
     for (let i = 0; i < count; i++) {
-      const persona = generateSinglePersona(rng, i + 1, usedNames);
+      const persona = generateSinglePersona(rng, i + 1, usedNames, undefined, framework);
       personas.push(persona);
     }
   }
@@ -104,6 +105,7 @@ function generateSinglePersona(
   id: number,
   usedNames: Set<string>,
   segmentOverride?: SegmentTraitOverrides,
+  framework?: QuestionFramework,
 ): Persona {
   const archetype: Archetype = rng.weightedChoice(ARCHETYPE_DISTRIBUTION);
   const profile = ARCHETYPE_TRAIT_PROFILES[archetype];
@@ -154,6 +156,6 @@ function generateSinglePersona(
     ...(segmentOverride ? { customSegment: segmentOverride.label } : {}),
   };
 
-  persona.bio = generateBio(persona, rng);
+  persona.bio = generateBio(persona, rng, framework);
   return persona;
 }

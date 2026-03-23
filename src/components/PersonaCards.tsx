@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import type { Persona, VoteResult } from '../types';
-import { ARCHETYPE_LABELS, ARCHETYPE_COLORS } from '../types/persona';
+import { getArchetypeLabels, ARCHETYPE_COLORS } from '../types/persona';
+import type { QuestionFramework } from '../types/poll';
 
 interface Props {
   personas: Persona[];
   votes: VoteResult[];
+  framework?: QuestionFramework;
 }
 
 const OPTION_COLORS = [
   '#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#3b82f6',
 ];
 
-export function PersonaCards({ personas, votes }: Props) {
+export function PersonaCards({ personas, votes, framework }: Props) {
   const [showAll, setShowAll] = useState(false);
   const voteMap = new Map(votes.map((v) => [v.personaId, v.selectedOptions]));
+  const archetypeLabels = getArchetypeLabels(framework);
 
   // Build option color map
   const optionSet = [...new Set(votes.flatMap((v) => v.selectedOptions))];
@@ -50,7 +53,7 @@ export function PersonaCards({ personas, votes }: Props) {
                 className="archetype-badge"
                 style={{ backgroundColor: archColor + '20', color: archColor }}
               >
-                {ARCHETYPE_LABELS[p.archetype]}
+                {archetypeLabels[p.archetype]}
               </span>
               <p className="persona-bio">{p.bio}</p>
               {votedFor.length > 0 && (

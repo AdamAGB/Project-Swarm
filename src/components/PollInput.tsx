@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { AudienceConfig, AudienceMode } from '../types/poll';
 
 export interface PollSubmission {
@@ -8,10 +8,14 @@ export interface PollSubmission {
   audienceConfig: AudienceConfig;
 }
 
+type AudienceSource = 'default' | 'user' | 'inferred';
+
 interface Props {
   onSubmit: (submission: PollSubmission) => void;
   disabled: boolean;
   isLoading: boolean;
+  onInferAudience?: (question: string) => Promise<string | null>;
+  onGenerateOptions?: (question: string) => Promise<string[] | null>;
 }
 
 const EXAMPLES: { question: string; options: string[] }[] = [
@@ -35,13 +39,53 @@ const AUDIENCE_MODE_LABELS: Record<AudienceMode, string> = {
   multi: 'Multiple Segments',
 };
 
-export function PollInput({ onSubmit, disabled, isLoading }: Props) {
+export function PollInput({ onSubmit, disabled, isLoading, onInferAudience, onGenerateOptions }: Props) {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState<string[]>(['', '']);
   const [allowMultiple, setAllowMultiple] = useState(false);
+  const [suggestedOptions, setSuggestedOptions] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [audienceMode, setAudienceMode] = useState<AudienceMode>('general');
   const [segmentDescriptions, setSegmentDescriptions] = useState<string[]>(['']);
   const [segmentWeights, setSegmentWeights] = useState<number[]>([1]);
+  const [audienceSource, setAudienceSource] = useState<AudienceSource>('default');
+  const [isInferring, setIsInferring] = useState(false);
+  const latestQuestionRef = useRef(question);
+
+  useEffect(() => {
+    latestQuestionRef.current = question;
+    setSuggestedOptions([]);
+  }, [question]);
+
+  useEffect(() => {
+    if (!onInferAudience || audienceSource === 'user' || question.trim().length < 15) return;
+
+    const timer = setTimeout(async () => {
+      const currentQuestion = question;
+      setIsInferring(true);
+      try {
+        const description = await onInferAudience(currentQuestion);
+        if (latestQuestionRef.current !== currentQuestion) return;
+        if (description) {
+          setAudienceMode('single');
+          setSegmentDescriptions([description]);
+          setSegmentWeights([1]);
+          setAudienceSource('inferred');
+        } else if (audienceSource === 'inferred') {
+          setAudienceMode('general');
+          setSegmentDescriptions(['']);
+          setSegmentWeights([1]);
+          setAudienceSource('default');
+        }
+      } finally {
+        if (latestQuestionRef.current === currentQuestion) {
+          setIsInferring(false);
+        }
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [question, onInferAudience, audienceSource]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +135,13 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
   };
 
   const addOption = () => {
-    setOptions([...options, '']);
+    if (suggestedOptions.length > 0) {
+      const [next, ...rest] = suggestedOptions;
+      setSuggestedOptions(rest);
+      setOptions([...options, next]);
+    } else {
+      setOptions([...options, '']);
+    }
   };
 
   const removeOption = (index: number) => {
@@ -102,10 +152,31 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
   const handleExample = (ex: { question: string; options: string[] }) => {
     setQuestion(ex.question);
     setOptions([...ex.options]);
+    setAudienceSource('default');
+    setAudienceMode('general');
+    setSegmentDescriptions(['']);
+    setSegmentWeights([1]);
+  };
+
+  const handleGenerate = async () => {
+    if (!onGenerateOptions || isGenerating) return;
+    setIsGenerating(true);
+    try {
+      const result = await onGenerateOptions(question);
+      if (result && result.length > 0) {
+        const visible = result.slice(0, 3);
+        const buffered = result.slice(3);
+        setOptions(visible);
+        setSuggestedOptions(buffered);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleAudienceModeChange = (mode: AudienceMode) => {
     setAudienceMode(mode);
+    setAudienceSource('user');
     if (mode === 'single') {
       setSegmentDescriptions([segmentDescriptions[0] || '']);
       setSegmentWeights([1]);
@@ -119,6 +190,7 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
     const next = [...segmentDescriptions];
     next[index] = value;
     setSegmentDescriptions(next);
+    setAudienceSource('user');
   };
 
   const handleSegmentWeightChange = (index: number, value: number) => {
@@ -140,6 +212,13 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
     setSegmentWeights(segmentWeights.filter((_, i) => i !== index));
   };
 
+  const dismissInferredAudience = () => {
+    setAudienceMode('general');
+    setSegmentDescriptions(['']);
+    setSegmentWeights([1]);
+    setAudienceSource('user');
+  };
+
   const filledOptions = options.filter((o) => o.trim().length > 0);
   const hasValidSegments = audienceMode === 'general' ||
     (audienceMode === 'single' && segmentDescriptions[0]?.trim()) ||
@@ -155,13 +234,25 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
         <textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="What do you want to ask 1,000 personas?"
+          placeholder="What do you want to ask 5,000 personas?"
           className="poll-textarea"
           rows={3}
           disabled={isLoading}
         />
 
-        <label className="form-label">Answer Options</label>
+        <div className="form-label-row">
+          <label className="form-label">Answer Options</label>
+          {onGenerateOptions && question.trim().length > 5 && (
+            <button
+              type="button"
+              className="btn-generate-options"
+              onClick={handleGenerate}
+              disabled={isLoading || isGenerating}
+            >
+              {isGenerating ? 'Generating...' : 'Generate'}
+            </button>
+          )}
+        </div>
         <div className="options-list">
           {options.map((opt, i) => (
             <div key={i} className="option-row">
@@ -220,7 +311,10 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
         </div>
 
         {/* Audience Targeting */}
-        <label className="form-label">Audience</label>
+        <label className="form-label">
+          Audience
+          {isInferring && <span className="audience-inferring-indicator"> (detecting...)</span>}
+        </label>
         <div className="audience-section">
           <div className="audience-mode-toggle">
             {(['general', 'single', 'multi'] as AudienceMode[]).map((mode) => (
@@ -238,6 +332,19 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
 
           {audienceMode === 'single' && (
             <div className="segment-inputs">
+              {audienceSource === 'inferred' && (
+                <div className="inferred-badge">
+                  <span className="inferred-badge-text">Suggested audience</span>
+                  <button
+                    type="button"
+                    className="inferred-badge-dismiss"
+                    onClick={dismissInferredAudience}
+                    title="Dismiss suggestion"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
               <input
                 type="text"
                 value={segmentDescriptions[0] || ''}
@@ -315,7 +422,7 @@ export function PollInput({ onSubmit, disabled, isLoading }: Props) {
               Running Poll...
             </span>
           ) : (
-            <>Run Poll &mdash; 1,000 Personas</>
+            <>Run Poll &mdash; 5,000 Personas</>
           )}
         </button>
       </form>

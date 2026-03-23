@@ -1,4 +1,4 @@
-import type { AgeBand, Gender, Region, Urbanicity, IncomeBand, EducationLevel, HouseholdType, NumericTraitKey } from './persona';
+import type { AgeBand, Gender, Region, Urbanicity, IncomeBand, EducationLevel, HouseholdType, NumericTraitKey, Archetype } from './persona';
 import type { WeightedOption } from '../engine/seeded-random';
 
 export type PollType = 'forced_choice' | 'yes_no' | 'yes_maybe_no';
@@ -38,20 +38,26 @@ export interface ParsedPoll {
   audienceConfig?: AudienceConfig;
 }
 
-export interface OptionScoreVector {
-  category_fit: number;
-  trustworthiness: number;
-  clarity: number;
-  memorability: number;
-  premium_feel: number;
-  playfulness: number;
-  weirdness: number;
-  safety_mismatch: number;
-  organic_fit: number;
-}
+export type OptionScoreVector = Record<string, number>;
 
-export type OptionDimension = keyof OptionScoreVector;
+export type OptionDimension = string;
 
 export interface ScoredOptions {
   options: Record<string, OptionScoreVector>;
+}
+
+export interface DimensionDef {
+  key: string;
+  label: string;
+  description: string;  // e.g. "How naturally it fits the domain (0=doesn't fit, 100=perfect fit)"
+}
+
+export interface QuestionFramework {
+  domain: string;
+  dimensions: DimensionDef[];
+  weightMatrix: Record<string, [NumericTraitKey, number][]>;
+  baselineWeights: Record<string, number>;
+  archetypeLabels: Record<Archetype, string>;
+  archetypeDescriptions: Record<Archetype, string>;
+  segmentTraits: { key: NumericTraitKey; label: string }[];
 }

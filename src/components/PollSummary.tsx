@@ -26,7 +26,7 @@ export function PollSummary({ summary }: Props) {
           </div>
         )}
         <p className="summary-footnote">
-          Generated from 1,000 synthetic persona votes using structured simulation.
+          Generated from 5,000 synthetic persona votes using structured simulation.
         </p>
       </div>
     </div>

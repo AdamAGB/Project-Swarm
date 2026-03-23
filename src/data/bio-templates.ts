@@ -1,4 +1,5 @@
 import type { Archetype, Persona } from '../types';
+import type { QuestionFramework } from '../types/poll';
 import { REGION_LABELS, URBANICITY_LABELS, INCOME_BAND_LABELS, EDUCATION_LABELS, HOUSEHOLD_LABELS } from './trait-distributions';
 import { REGION_CITIES } from './name-bank';
 import { SeededRandom } from '../engine/seeded-random';
@@ -59,14 +60,37 @@ function getPronoun(gender: string): { pronoun: string; pronoun_lower: string } 
   }
 }
 
-export function generateBio(persona: Persona, rng: SeededRandom): string {
-  const templates = ARCHETYPE_TEMPLATES[persona.archetype];
-  const template = rng.pick(templates);
+const GENERIC_TEMPLATES: string[] = [
+  '{name} is a {age} {urbanicity} {region} resident. As a {archetype_label}, {pronoun_lower} {archetype_description}',
+  'A {age} {household} from {city}, {name} is a {archetype_label}. {pronoun} {archetype_description}',
+  '{name}, {age}, lives in {city}. {pronoun} is a {archetype_label} who {archetype_description}',
+  'From {urbanicity} {region}, {name} ({age}) is a {archetype_label}. {pronoun} {archetype_description}',
+  '{name} is a {age} {education} from the {region}. As a {archetype_label}, {pronoun_lower} {archetype_description}',
+  'As a {household} in {city}, {name} ({age}) is a {archetype_label}. {pronoun} {archetype_description}',
+];
 
+export function generateBio(persona: Persona, rng: SeededRandom, framework?: QuestionFramework): string {
   const { pronoun, pronoun_lower } = getPronoun(persona.traits.gender);
   const city = rng.pick(REGION_CITIES[persona.traits.region] || ['a small town']);
 
-  const bio = template.template
+  let templateStr: string;
+
+  if (framework) {
+    templateStr = rng.pick(GENERIC_TEMPLATES);
+    const archetypeLabel = framework.archetypeLabels[persona.archetype] || persona.archetype;
+    const archetypeDesc = framework.archetypeDescriptions[persona.archetype] || '';
+    // Lowercase the first char of the description for sentence flow
+    const descLower = archetypeDesc.charAt(0).toLowerCase() + archetypeDesc.slice(1);
+
+    templateStr = templateStr
+      .replace(/\{archetype_label\}/g, archetypeLabel)
+      .replace(/\{archetype_description\}/g, descLower);
+  } else {
+    const templates = ARCHETYPE_TEMPLATES[persona.archetype];
+    templateStr = rng.pick(templates).template;
+  }
+
+  const bio = templateStr
     .replace(/\{name\}/g, persona.name)
     .replace(/\{age\}/g, persona.traits.age_band)
     .replace(/\{urbanicity\}/g, URBANICITY_LABELS[persona.traits.urbanicity])

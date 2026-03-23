@@ -1,7 +1,13 @@
 import type OpenAI from 'openai';
 import type { ParsedPoll, VoteAggregates, SegmentAnalysis, PollSummaryText } from '../types';
+import type { QuestionFramework } from '../types/poll';
 
-const SYSTEM_PROMPT = `You summarize AI swarm poll results in an engaging, insightful way.
+function buildSystemPrompt(framework?: QuestionFramework): string {
+  const domainContext = framework
+    ? `\nThis poll is in the "${framework.domain}" domain. Use language and framing appropriate to this domain, not consumer/brand terminology unless the domain is actually consumer-related.`
+    : '';
+
+  return `You summarize AI swarm poll results in an engaging, insightful way.
 
 Write:
 - A punchy headline (10-15 words max)
@@ -9,9 +15,10 @@ Write:
 - 3-5 key insight bullet points
 
 Be specific about which segments preferred what and why. Reference the data provided.
-Make it feel like a real analyst wrote this, not generic filler.
+Make it feel like a real analyst wrote this, not generic filler.${domainContext}
 
 Return JSON: { "headline": string, "body": string, "keyInsights": ["...", "...", ...] }`;
+}
 
 function formatSegmentsForPrompt(segments: SegmentAnalysis): string {
   const lines: string[] = [];
@@ -38,6 +45,7 @@ export async function generateSummary(
   poll: ParsedPoll,
   aggregates: VoteAggregates,
   segments: SegmentAnalysis,
+  framework?: QuestionFramework,
 ): Promise<PollSummaryText> {
   const segmentSummary = formatSegmentsForPrompt(segments);
 
@@ -47,9 +55,9 @@ export async function generateSummary(
     .join(', ');
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.4-mini',
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: buildSystemPrompt(framework) },
       {
         role: 'user',
         content: `Poll context: "${poll.context}"\nPoll type: ${poll.poll_type}\nResponse mode: ${poll.allowMultiple ? 'multiple selections allowed' : 'single choice'}\nTotal personas: ${aggregates.totalPersonas}\n\nResults: ${voteSummary}\nMost selected: "${aggregates.winner}" with ${aggregates.winnerPercentage.toFixed(1)}% of personas\n\nSegment breakdown:\n${segmentSummary}`,

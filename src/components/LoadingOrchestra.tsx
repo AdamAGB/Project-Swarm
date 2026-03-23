@@ -9,6 +9,7 @@ interface Props {
 const STAGE_ORDER = [
   'parsing_question',
   'parsing_audience',
+  'generating_framework',
   'scoring_options',
   'generating_personas',
   'voting',
@@ -20,6 +21,7 @@ const STAGE_ORDER = [
 const STAGE_ICONS: Record<string, string> = {
   parsing_question: '🧠',
   parsing_audience: '🎯',
+  generating_framework: '🧬',
   scoring_options: '📊',
   generating_personas: '👥',
   voting: '🗳️',
@@ -31,6 +33,7 @@ const STAGE_ICONS: Record<string, string> = {
 const STAGE_SHORT_LABELS: Record<string, string> = {
   parsing_question: 'Parse',
   parsing_audience: 'Audience',
+  generating_framework: 'Framework',
   scoring_options: 'Score',
   generating_personas: 'Generate',
   voting: 'Vote',

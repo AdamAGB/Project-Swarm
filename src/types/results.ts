@@ -49,6 +49,7 @@ export type PollStage =
   | 'idle'
   | 'parsing_question'
   | 'parsing_audience'
+  | 'generating_framework'
   | 'scoring_options'
   | 'generating_personas'
   | 'voting'
@@ -68,6 +69,7 @@ export interface PollProgress {
 
 export interface PollResults {
   poll: import('./poll').ParsedPoll;
+  framework: import('./poll').QuestionFramework;
   scoredOptions: import('./poll').ScoredOptions;
   votes: VoteResult[];
   aggregates: VoteAggregates;

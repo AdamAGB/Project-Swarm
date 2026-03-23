@@ -1,5 +1,6 @@
 import type { Persona, Archetype, NumericTraitKey, VoteResult, SegmentResult, SegmentAnalysis } from '../types';
-import { ARCHETYPE_LABELS } from '../types';
+import { getArchetypeLabels } from '../types';
+import type { QuestionFramework } from '../types/poll';
 
 function aggregateSegment(
   segmentName: string,
@@ -36,7 +37,7 @@ function aggregateSegment(
   };
 }
 
-const SEGMENTED_TRAITS: { key: NumericTraitKey; label: string }[] = [
+const DEFAULT_SEGMENTED_TRAITS: { key: NumericTraitKey; label: string }[] = [
   { key: 'novelty_seeking', label: 'Novelty Seeking' },
   { key: 'trust_in_brands', label: 'Trust in Brands' },
   { key: 'premium_willingness', label: 'Premium Willingness' },
@@ -51,8 +52,10 @@ export function analyzeSegments(
   personas: Persona[],
   votes: VoteResult[],
   options: string[],
+  framework?: QuestionFramework,
 ): SegmentAnalysis {
   const voteMap = new Map(votes.map((v) => [v.personaId, v.selectedOptions]));
+  const labels = getArchetypeLabels(framework);
 
   const archetypes: Archetype[] = [
     'budget_conscious_pragmatist',
@@ -64,11 +67,12 @@ export function analyzeSegments(
 
   const byArchetype = archetypes.map((arch) => {
     const filtered = personas.filter((p) => p.archetype === arch);
-    return aggregateSegment('Archetype', ARCHETYPE_LABELS[arch], filtered, voteMap, options);
+    return aggregateSegment('Archetype', labels[arch], filtered, voteMap, options);
   });
 
+  const segmentedTraits = framework?.segmentTraits ?? DEFAULT_SEGMENTED_TRAITS;
   const byTrait: SegmentResult[] = [];
-  for (const { key, label } of SEGMENTED_TRAITS) {
+  for (const { key, label } of segmentedTraits) {
     const high = personas.filter((p) => (p.traits[key] as number) >= 60);
     const low = personas.filter((p) => (p.traits[key] as number) < 40);
 

@@ -71,6 +71,11 @@ export const ARCHETYPE_LABELS: Record<Archetype, string> = {
   convenience_first_shopper: 'Convenience-First Shopper',
 };
 
+export function getArchetypeLabels(framework?: import('./poll').QuestionFramework): Record<Archetype, string> {
+  if (framework?.archetypeLabels) return framework.archetypeLabels;
+  return ARCHETYPE_LABELS;
+}
+
 export const ARCHETYPE_COLORS: Record<Archetype, string> = {
   budget_conscious_pragmatist: '#3b82f6',
   premium_curious_trend_seeker: '#ec4899',

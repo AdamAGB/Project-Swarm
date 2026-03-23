@@ -268,6 +268,32 @@
   letter-spacing: 0.03em;
 }
 
+/* ===== FORM LABEL ROW ===== */
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-generate-options {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.btn-generate-options:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.08);
+}
+.btn-generate-options:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ===== OPTIONS LIST ===== */
 .options-list {
   display: flex;
@@ -535,6 +561,48 @@
   color: var(--color-primary);
   min-width: 36px;
   text-align: right;
+}
+
+.audience-inferring-indicator {
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.inferred-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 20px;
+  padding: 0.2rem 0.55rem 0.2rem 0.7rem;
+  align-self: flex-start;
+}
+
+.inferred-badge-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #7c3aed;
+}
+
+.inferred-badge-dismiss {
+  background: none;
+  border: none;
+  color: #7c3aed;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.15rem;
+  line-height: 1;
+  border-radius: 50%;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.inferred-badge-dismiss:hover {
+  opacity: 1;
 }
 
 /* ===== LOADING ORCHESTRA ===== */

@@ -26,11 +26,11 @@ export function ResultsDashboard({ results, personas }: Props) {
 
       {results.summary && <PollSummary summary={results.summary} />}
 
-      <SegmentBreakdown segments={results.segments} options={results.poll.options} />
+      <SegmentBreakdown segments={results.segments} options={results.poll.options} framework={results.framework} />
 
       {results.comments.length > 0 && <CommentsList comments={results.comments} />}
 
-      <PersonaCards personas={personas} votes={results.votes} />
+      <PersonaCards personas={personas} votes={results.votes} framework={results.framework} />
     </div>
   );
 }
