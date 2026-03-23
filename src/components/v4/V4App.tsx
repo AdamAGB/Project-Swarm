@@ -574,7 +574,7 @@ export function V4App() {
   }
 
   return (
-    <div className="v3-app">
+    <div className={hasKey ? 'v3-app' : ''}>
       {!hasKey ? (
         /* ---- Onboarding: split-screen layout ---- */
         <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
@@ -693,10 +693,10 @@ export function V4App() {
 
             {/* Right: live viz demo */}
             <div style={{
-              background: 'rgba(255,255,255,0.02)', borderRadius: '14px',
-              padding: '14px 6px', border: '1px solid rgba(255,255,255,0.05)',
+              background: 'rgba(255,255,255,0.03)', borderRadius: '14px',
+              padding: '20px 12px', border: '1px solid rgba(255,255,255,0.06)',
             }}>
-              <p style={{ textAlign: 'center', fontSize: '12px', color: '#555', marginBottom: '6px' }}>
+              <p style={{ textAlign: 'center', fontSize: '14px', color: '#9ca3af', marginBottom: '10px', fontStyle: 'italic' }}>
                 "Which product name resonates best for a new energy drink?"
               </p>
               <VoteParticleViz
@@ -705,6 +705,33 @@ export function V4App() {
                 options={HERO_OPTIONS}
               />
             </div>
+          </div>
+
+          {/* Bottom: feature highlights */}
+          <div style={{
+            maxWidth: 1000, margin: '0 auto', padding: '40px 24px 48px',
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px',
+            borderTop: '1px solid #1a1a1a',
+          }}>
+            {[
+              {
+                title: 'Multi-Model Ensemble',
+                desc: 'Votes distributed across GPT, Claude, and Gemini. Different model biases cancel out for more reliable results.',
+              },
+              {
+                title: 'Probabilistic Voting',
+                desc: 'Each voter gives a probability distribution, not just a single pick. Produces real confidence intervals you can trust.',
+              },
+              {
+                title: 'Write-In Intelligence',
+                desc: 'Every voter suggests what option they wish existed. Clustered write-ins reveal gaps in your thinking.',
+              },
+            ].map((f) => (
+              <div key={f.title}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#e0e0e0', marginBottom: '6px' }}>{f.title}</div>
+                <div style={{ fontSize: '13px', color: '#666', lineHeight: 1.5 }}>{f.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       ) : step === 'input' ? (
