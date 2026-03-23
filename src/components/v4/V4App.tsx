@@ -828,7 +828,7 @@ export function V4App() {
                 onClick={handleAdvancedSubmit}
                 style={{ padding: '11px 28px', borderRadius: '8px', fontSize: '14px' }}
               >
-                Begin Simulation
+                Add Poll
               </button>
               <button
                 className="btn-secondary"
