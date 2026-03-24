@@ -755,7 +755,7 @@ export function V4App() {
             >
               {attachments.length >= MAX_ATTACHMENTS
                 ? 'Max attachments reached'
-                : 'Drop files here or click to attach (images, txt, csv, md)'}
+                : 'Drop files here or click to attach (PDF, DOCX, images, JSON, HTML, TXT, CSV)'}
             </div>
             <input
               ref={fileInputRef}
