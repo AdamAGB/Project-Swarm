@@ -889,6 +889,10 @@ export function V4App() {
                 desc: 'GPT, Claude, and Gemini vote independently. Their combined judgment is sharper than any single model alone.',
               },
               {
+                title: 'Your Audience, Your Rules',
+                desc: 'Define custom segments — "budget-conscious parents," "skeptical engineers," "Gen Z foodies" — and see how each group votes differently.',
+              },
+              {
                 title: 'Not Just a Vote — a Signal',
                 desc: 'Every voter gives a full probability distribution. You get confidence intervals, not just a winner.',
               },
