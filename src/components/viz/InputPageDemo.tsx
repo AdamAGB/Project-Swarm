@@ -10,7 +10,7 @@ function V1() {
   return (
     <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Decision Wolf</span>
         <span style={{ fontSize: '11px', color: '#555' }}>Hosted mode — change</span>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
@@ -54,7 +54,7 @@ function V2() {
             background: 'linear-gradient(135deg, #a78bfa 0%, #60a5fa 50%, #34d399 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Project Swarm
+            Decision Wolf
           </h1>
           <textarea
             placeholder="Ask your question and poll your swarm"
@@ -86,7 +86,7 @@ function V3() {
   return (
     <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Decision Wolf</span>
         <span style={{ fontSize: '11px', color: '#555' }}>Hosted mode — change</span>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', marginTop: '-40px' }}>
@@ -132,7 +132,7 @@ function V4() {
         padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '16px',
         borderBottom: '1px solid #1a1a1a',
       }}>
-        <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Project Swarm</span>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: '#e0e0e0' }}>Decision Wolf</span>
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: '11px', color: '#555' }}>Hosted mode — change</span>
       </div>
@@ -186,7 +186,7 @@ function V5() {
             S
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#e0e0e0', marginBottom: '6px' }}>
-            Project Swarm
+            Decision Wolf
           </h1>
           <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
             Poll your synthetic audience

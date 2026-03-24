@@ -33,12 +33,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const resend = new Resend(resendKey);
   try {
     await resend.emails.send({
-      from: process.env.FROM_EMAIL || 'Project Swarm <noreply@projectswarm.app>',
+      from: process.env.FROM_EMAIL || 'Decision Wolf <noreply@projectswarm.app>',
       to: email.toLowerCase().trim(),
-      subject: 'Your Project Swarm verification code',
+      subject: 'Your Decision Wolf verification code',
       html: `
         <div style="font-family: system-ui, sans-serif; max-width: 400px; margin: 0 auto; padding: 24px;">
-          <h2 style="color: #059669; margin-bottom: 8px;">Project Swarm</h2>
+          <h2 style="color: #059669; margin-bottom: 8px;">Decision Wolf</h2>
           <p style="color: #333; font-size: 16px;">Your verification code is:</p>
           <div style="font-size: 32px; font-weight: 700; letter-spacing: 4px; color: #0a1f18; margin: 16px 0; padding: 12px; background: #f2f8f6; border-radius: 8px; text-align: center;">
             ${code}

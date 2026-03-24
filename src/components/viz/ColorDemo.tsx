@@ -72,7 +72,7 @@ function Page({ theme: t, replayKey }: { theme: Theme; replayKey: number }) {
     <div style={{ minHeight: '100vh', background: t.bg, display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${t.border}` }}>
-        <span style={{ fontSize: '15px', fontWeight: 700, color: t.textPrimary }}>Project Swarm</span>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: t.textPrimary }}>Decision Wolf</span>
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: '11px', color: t.textMuted }}>Hosted mode — change</span>
       </div>

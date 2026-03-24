@@ -638,7 +638,7 @@ export function V4App() {
         <div style={{ minHeight: '100vh', background: '#f2f8f6', display: 'flex', flexDirection: 'column' }}>
           {/* Top bar with title */}
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #d8ece4', background: '#f4faf8' }}>
-            <span style={{ fontSize: '16px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#0a1f18' }}>Decision Wolf</span>
           </div>
 
           {/* Main split content */}
@@ -649,10 +649,10 @@ export function V4App() {
                 Synthetic Audience Intelligence
               </div>
               <h1 style={{ fontSize: '34px', fontWeight: 800, lineHeight: 1.15, marginBottom: '16px', color: '#0a1f18' }}>
-                Poll your AI swarm.
+                Unleash the pack<br />on any question.
               </h1>
               <p style={{ fontSize: '15px', color: '#3d6858', lineHeight: 1.6, marginBottom: '28px' }}>
-                Skip the survey. Ask hundreds of AI personas your question and have them vote using the wisdom of three different LLM models. Define custom segments, upload files, and get better answers.
+                Hundreds of AI-driven voters hunt down the answer to your question across three independent models. Define your audience, sharpen your options, and let the pack decide.
               </p>
 
               <p style={{ fontSize: '13px', color: '#7aaa98', marginBottom: '10px' }}>
@@ -885,16 +885,16 @@ export function V4App() {
           <div className="v4-features-grid" style={{ borderTop: '1px solid #d8ece4' }}>
             {[
               {
-                title: 'Multi-Model Ensemble',
-                desc: 'Votes distributed across GPT, Claude, and Gemini. Different model biases cancel out for more reliable results.',
+                title: 'Three Minds, One Verdict',
+                desc: 'GPT, Claude, and Gemini vote independently. Their combined judgment is sharper than any single model alone.',
               },
               {
-                title: 'Probabilistic Voting',
-                desc: 'Each voter gives a probability distribution, not just a single pick. Produces real confidence intervals you can trust.',
+                title: 'Not Just a Vote — a Signal',
+                desc: 'Every voter gives a full probability distribution. You get confidence intervals, not just a winner.',
               },
               {
-                title: 'Write-In Intelligence',
-                desc: 'Every voter suggests what option they wish existed. Clustered write-ins reveal gaps in your thinking.',
+                title: 'The Options You Missed',
+                desc: 'Every voter writes in what they wish was on the ballot. See what your blind spots look like, clustered and ranked.',
               },
             ].map((f) => (
               <div key={f.title}>
@@ -912,7 +912,7 @@ export function V4App() {
             borderBottom: '1px solid #d8ece4', background: '#f4faf8',
             position: 'relative', zIndex: 10,
           }}>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: '#0a1f18' }}>Decision Wolf</span>
             <div style={{ flex: 1 }} />
             {subscriberEmail && (
               <button
@@ -944,7 +944,7 @@ export function V4App() {
           {/* Centered input */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', marginTop: '-60px' }}>
             <p style={{ fontSize: '20px', color: '#0a1f18', fontWeight: 300, marginBottom: '20px' }}>
-              Ask a question, poll your swarm
+              Ask a question, let the pack decide
             </p>
             <div style={{ width: '100%', maxWidth: 600 }} className="v3-input-wrapper">
               <textarea

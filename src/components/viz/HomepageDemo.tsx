@@ -38,7 +38,7 @@ function V1({ data, replayKey }: { data: ReturnType<typeof generateMockData>; re
         <h1 style={{ fontSize: '42px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '12px',
           background: 'linear-gradient(135deg, #a78bfa 0%, #60a5fa 50%, #34d399 100%)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Project Swarm
+          Decision Wolf
         </h1>
         <p style={{ fontSize: '17px', color: '#b0b8c8', lineHeight: 1.6, maxWidth: 480, margin: '0 auto 32px' }}>
           Generate hundreds of synthetic AI voters with custom segments to poll on any question.
@@ -72,7 +72,7 @@ function V2({ data, replayKey }: { data: ReturnType<typeof generateMockData>; re
             Ask any question.<br />Get real answers.
           </h1>
           <p style={{ fontSize: '16px', color: '#8892a6', lineHeight: 1.6, marginBottom: '28px' }}>
-            Project Swarm generates hundreds of diverse AI voters across custom audience segments. See how different groups think — in seconds.
+            Decision Wolf generates hundreds of diverse AI voters across custom audience segments. See how different groups think — in seconds.
           </p>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button className="btn-primary" style={{ padding: '12px 24px', borderRadius: '8px' }}>Get Started</button>
@@ -130,7 +130,7 @@ function V4({ data, replayKey }: { data: ReturnType<typeof generateMockData>; re
       <div style={{ maxWidth: 700, margin: '0 auto', paddingTop: '10vh' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h1 style={{ fontSize: '48px', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '8px' }}>
-            Project Swarm
+            Decision Wolf
           </h1>
           <p style={{ fontSize: '18px', color: '#aaa', fontWeight: 300 }}>
             Synthetic audience intelligence
@@ -199,7 +199,7 @@ function V5({ data, replayKey }: { data: ReturnType<typeof generateMockData>; re
           <h1 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '12px',
             background: 'linear-gradient(135deg, #818cf8, #38bdf8)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Project Swarm
+            Decision Wolf
           </h1>
           <p style={{ fontSize: '15px', color: '#9ca3af', lineHeight: 1.6, marginBottom: '28px' }}>
             Generate hundreds of synthetic AI voters with custom segments to poll on any question. Deeper, more tailored insights.
