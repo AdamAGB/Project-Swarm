@@ -284,11 +284,12 @@ Rules:
 - Vary the names, ages, occupations, and reasoning
 - Be honest: if most people would reject an option, most personas should give it low probability
 - Include diverse opinions — real groups are never unanimous
-- Reasons should explain their top preference, 1 sentence, first-person, natural and conversational
+- Each persona must include a "vote" field with the EXACT text of their single top choice. The "reason" must explain why they picked that specific vote. Vote and reason must be about the same option.
+- Reasons should be 1 sentence, first-person, natural and conversational
 - Do NOT start every reason with "I"
 - Every persona MUST provide a write_in: a short, concrete suggestion (2-5 words) for a specific option they wish was on the list, or "nothing" if they're happy with the options. It should be a real, nameable thing — not an abstract description or theme.
 
-Return JSON: { "votes": [{ "name": "First name", "desc": "Age, occupation", "distribution": { ${optionKeys}: probability, ... }, "reason": "Their reasoning", "write_in": "Short suggestion or null" }, ...] }`;
+Return JSON: { "votes": [{ "name": "First name", "desc": "Age, occupation", "vote": "Exact option text of their top choice", "distribution": { ${optionKeys}: probability, ... }, "reason": "Why they picked their vote", "write_in": "Short suggestion or null" }, ...] }`;
 
   const user = segment
     ? `Question: "${question}"\nOptions:\n${shuffled.map((o, i) => `${i + 1}. ${o}`).join('\n')}\n\nGenerate ${count} voters from the "${segment.name}" segment.`
@@ -328,8 +329,11 @@ Return JSON: { "votes": [{ "name": "First name", "desc": "Age, occupation", "dis
         for (const opt of options) distribution[opt] = 1 / options.length;
       }
 
-      // Top preference — used for persona card display only; aggregates use averaged distributions
-      const vote = options.reduce((best, opt) =>
+      // Use LLM's stated vote for display (matches their reason text)
+      // Fall back to distribution max if vote field is missing or invalid
+      const rawVote = String(v.vote ?? '').trim();
+      const matchedVote = options.find((o) => o.toLowerCase().trim() === rawVote.toLowerCase());
+      const vote = matchedVote ?? options.reduce((best, opt) =>
         (distribution[opt] ?? 0) > (distribution[best] ?? 0) ? opt : best,
       );
 
