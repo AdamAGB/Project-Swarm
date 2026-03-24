@@ -184,6 +184,41 @@ export function getDemoProviders(inviteCode: string): LLMProvider[] {
   ];
 }
 
+/** Get providers for subscriber mode (using email through server proxy) */
+function createSubscriberProvider(email: string, providerName: 'openai' | 'anthropic' | 'gemini', displayName: string): LLMProvider {
+  return {
+    name: displayName,
+    async complete(messages, options = {}) {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscriberEmail: email,
+          provider: providerName,
+          messages,
+          temperature: options.temperature,
+          jsonMode: options.jsonMode,
+          maxTokens: options.maxTokens,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || `Subscriber proxy ${res.status}`);
+      }
+      const data = await res.json();
+      return data.content ?? null;
+    },
+  };
+}
+
+export function getSubscriberProviders(email: string): LLMProvider[] {
+  return [
+    createSubscriberProvider(email, 'openai', 'OpenAI'),
+    createSubscriberProvider(email, 'anthropic', 'Claude'),
+    createSubscriberProvider(email, 'gemini', 'Gemini'),
+  ];
+}
+
 /** Get all available providers from the keys the user has entered */
 export function getAvailableProviders(keys: {
   openai?: string;

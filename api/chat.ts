@@ -25,7 +25,8 @@ function checkRateLimit(ip: string): boolean {
 /* ------------------------------------------------------------------ */
 
 interface ChatRequest {
-  inviteCode: string;
+  inviteCode?: string;
+  subscriberEmail?: string;
   provider: 'openai' | 'anthropic' | 'gemini';
   messages: { role: string; content: string }[];
   temperature?: number;
@@ -127,10 +128,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = req.body as ChatRequest;
 
-  // Validate invite code
+  // Validate access: invite code OR active subscriber
   const validCode = process.env.INVITE_CODE;
-  if (!validCode || body.inviteCode !== validCode) {
-    return res.status(403).json({ error: 'Invalid invite code' });
+  const hasValidInvite = validCode && body.inviteCode === validCode;
+
+  let hasValidSubscription = false;
+  if (!hasValidInvite && body.subscriberEmail) {
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (stripeKey) {
+      try {
+        const { default: Stripe } = await import('stripe');
+        const stripe = new Stripe(stripeKey);
+        const customers = await stripe.customers.list({ email: body.subscriberEmail.toLowerCase().trim(), limit: 1 });
+        if (customers.data.length > 0) {
+          const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status: 'active', limit: 1 });
+          hasValidSubscription = subs.data.length > 0;
+        }
+      } catch (err) {
+        console.error('[chat] Stripe check failed:', err);
+      }
+    }
+  }
+
+  if (!hasValidInvite && !hasValidSubscription) {
+    return res.status(403).json({ error: 'Invalid access' });
   }
 
   // Rate limit

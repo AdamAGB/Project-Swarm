@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import { generateOptionsExpanded } from '../../services/option-generator';
-import { getAvailableProviders, getDemoProviders } from '../../services/llm-providers';
+import { getAvailableProviders, getDemoProviders, getSubscriberProviders } from '../../services/llm-providers';
 import { generateOptionsMultiModel, generateSegmentsViaProvider, runMultiModelVoting } from '../../services/multi-model';
 import type { PersonaVoteResult, PersonaVote } from '../../services/persona-vote-engine';
 import { createOpenAIClient } from '../../services/openai';
@@ -80,6 +80,13 @@ function toV2VoteData(result: PersonaVoteResult): {
 }
 
 export function V4App() {
+  // Handle Stripe redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('subscribed') === 'true') {
+    // User just subscribed — they need to verify email again to activate
+    window.history.replaceState({}, '', '/');
+  }
+
   // Multi-model API keys
   // API key mode
   const [keys, setKeys] = useState<{ openai: string; anthropic: string; gemini: string }>(() => ({
@@ -95,7 +102,7 @@ export function V4App() {
   }
 
   // Demo mode
-  const [demoMode, setDemoMode] = useState(() => localStorage.getItem('demo_validated') === 'true');
+  // demoMode derived from authMode
   const [demoValidated, setDemoValidated] = useState(() => localStorage.getItem('demo_validated') === 'true');
   const [inviteCode, setInviteCode] = useState(() => localStorage.getItem('invite_code') ?? '');
   const [inviteError, setInviteError] = useState('');
@@ -168,9 +175,110 @@ export function V4App() {
     setByokLoading(false);
   }
 
+  // Subscriber mode
+  const [authMode, setAuthMode] = useState<'demo' | 'byok' | 'subscriber'>(() => {
+    if (localStorage.getItem('subscriber_email')) return 'subscriber';
+    if (localStorage.getItem('demo_validated') === 'true') return 'demo';
+    if (localStorage.getItem('byok_validated') === 'true') return 'byok';
+    return 'demo';
+  });
+  const [subscriberEmail, setSubscriberEmail] = useState(() => localStorage.getItem('subscriber_email') ?? '');
+  const [emailInput, setEmailInput] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationSignature, setVerificationSignature] = useState('');
+  const [authStep, setAuthStep] = useState<'email' | 'code' | 'subscribe' | 'done'>(() =>
+    localStorage.getItem('subscriber_email') ? 'done' : 'email'
+  );
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  async function sendVerificationCode() {
+    if (!emailInput.trim() || !emailInput.includes('@')) return;
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send code');
+      setVerificationSignature(data.signature);
+      setAuthStep('code');
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Failed to send code');
+    }
+    setAuthLoading(false);
+  }
+
+  async function verifyCodeAndCheck() {
+    if (!verificationCode.trim()) return;
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailInput.trim(),
+          code: verificationCode.trim(),
+          signature: verificationSignature,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      if (!data.verified) throw new Error('Invalid code');
+
+      if (data.subscribed) {
+        // Active subscriber — grant access
+        localStorage.setItem('subscriber_email', emailInput.trim().toLowerCase());
+        setSubscriberEmail(emailInput.trim().toLowerCase());
+        setAuthStep('done');
+      } else {
+        // Verified but not subscribed — show subscribe button
+        setAuthStep('subscribe');
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Verification failed');
+    }
+    setAuthLoading(false);
+  }
+
+  async function startSubscription() {
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/auth/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to start checkout');
+      window.location.href = data.url;
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Failed to start checkout');
+      setAuthLoading(false);
+    }
+  }
+
+  async function openPortal() {
+    try {
+      const res = await fetch('/api/auth/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: subscriberEmail }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) window.location.href = data.url;
+    } catch { /* ignore */ }
+  }
+
   const byokProviders = useMemo(() => byokValidated ? getAvailableProviders(keys) : [], [keys, byokValidated]);
   const demoProviders = useMemo(() => (demoValidated && inviteCode) ? getDemoProviders(inviteCode) : [], [demoValidated, inviteCode]);
-  const providers = demoMode ? demoProviders : byokProviders;
+  const subscriberProviders = useMemo(() => subscriberEmail ? getSubscriberProviders(subscriberEmail) : [], [subscriberEmail]);
+  const providers = authMode === 'subscriber' ? subscriberProviders : authMode === 'demo' ? demoProviders : byokProviders;
   const hasKey = providers.length > 0;
 
   const [step, setStep] = useState<Step>('input');
@@ -552,35 +660,125 @@ export function V4App() {
               </p>
 
               {/* Auth mode cards */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                <button
-                  onClick={() => { setDemoMode(true); setShowKeys(true); }}
-                  style={{
-                    flex: 1, padding: '14px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
-                    border: (demoMode && showKeys) ? '2px solid #059669' : '1px solid #d8ece4',
-                    background: (demoMode && showKeys) ? '#e6f5ef' : '#ffffff',
-                  }}
-                >
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Simple: Hosted <span style={{ fontSize: '11px' }}>&#8250;</span></div>
-                  <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>Enter invite code</div>
-                </button>
-                <button
-                  onClick={() => { setDemoMode(false); setShowKeys(true); }}
-                  style={{
-                    flex: 1, padding: '14px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
-                    border: (!demoMode && showKeys) ? '2px solid #059669' : '1px solid #d8ece4',
-                    background: (!demoMode && showKeys) ? '#e6f5ef' : '#ffffff',
-                  }}
-                >
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '3px' }}>Advanced: Your API Keys <span style={{ fontSize: '11px' }}>&#8250;</span></div>
-                  <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>Bring OpenAI, Claude, Gemini</div>
-                </button>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                {([
+                  { mode: 'subscriber' as const, label: 'Subscribe', sub: '$10/mo — all models' },
+                  { mode: 'demo' as const, label: 'Invite Code', sub: 'Free with code' },
+                  { mode: 'byok' as const, label: 'Your API Keys', sub: 'Bring your own' },
+                ] as const).map(({ mode, label, sub }) => (
+                  <button
+                    key={mode}
+                    onClick={() => { setAuthMode(mode); setShowKeys(true); }}
+                    style={{
+                      flex: '1 1 120px', padding: '12px 10px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
+                      border: (authMode === mode && showKeys) ? '2px solid #059669' : '1px solid #d8ece4',
+                      background: (authMode === mode && showKeys) ? '#e6f5ef' : '#ffffff',
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0a1f18', marginBottom: '2px' }}>{label} <span style={{ fontSize: '11px' }}>&#8250;</span></div>
+                    <div style={{ fontSize: '11px', color: '#7aaa98', lineHeight: 1.3 }}>{sub}</div>
+                  </button>
+                ))}
               </div>
 
               {/* Auth inputs */}
               {showKeys && (
                 <div style={{ marginTop: '4px' }}>
-                  {demoMode ? (
+                  {authMode === 'subscriber' ? (
+                    <div>
+                      {authStep === 'email' && (
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                              type="email"
+                              value={emailInput}
+                              onChange={(e) => { setEmailInput(e.target.value); setAuthError(''); }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') sendVerificationCode(); }}
+                              placeholder="Enter your email"
+                              autoFocus
+                              style={{
+                                flex: 1, padding: '10px 14px', fontSize: '14px',
+                                background: '#f6fbf9', borderRadius: '8px', color: '#0a1f18',
+                                border: authError ? '1px solid #dc2626' : '1px solid #c8e0d6',
+                              }}
+                            />
+                            <button
+                              onClick={sendVerificationCode}
+                              disabled={!emailInput.includes('@') || authLoading}
+                              style={{
+                                padding: '10px 20px', fontSize: '14px', fontWeight: 600,
+                                borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                background: emailInput.includes('@') ? '#059669' : '#c8e0d6', color: '#fff',
+                                opacity: authLoading ? 0.6 : 1,
+                              }}
+                            >
+                              {authLoading ? '...' : 'Send Code'}
+                            </button>
+                          </div>
+                          <p style={{ color: '#7aaa98', fontSize: '11px', margin: '6px 0 0' }}>
+                            We'll send a verification code to your email.
+                          </p>
+                        </div>
+                      )}
+                      {authStep === 'code' && (
+                        <div>
+                          <p style={{ color: '#3d6858', fontSize: '13px', marginBottom: '8px' }}>
+                            Code sent to <strong>{emailInput}</strong>
+                          </p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                              type="text"
+                              value={verificationCode}
+                              onChange={(e) => { setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setAuthError(''); }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') verifyCodeAndCheck(); }}
+                              placeholder="6-digit code"
+                              autoFocus
+                              maxLength={6}
+                              style={{
+                                width: '140px', padding: '10px 14px', fontSize: '18px', letterSpacing: '4px',
+                                background: '#f6fbf9', borderRadius: '8px', color: '#0a1f18', textAlign: 'center',
+                                border: authError ? '1px solid #dc2626' : '1px solid #c8e0d6',
+                              }}
+                            />
+                            <button
+                              onClick={verifyCodeAndCheck}
+                              disabled={verificationCode.length !== 6 || authLoading}
+                              style={{
+                                padding: '10px 20px', fontSize: '14px', fontWeight: 600,
+                                borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                background: verificationCode.length === 6 ? '#059669' : '#c8e0d6', color: '#fff',
+                                opacity: authLoading ? 0.6 : 1,
+                              }}
+                            >
+                              {authLoading ? '...' : 'Verify'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {authStep === 'subscribe' && (
+                        <div>
+                          <p style={{ color: '#3d6858', fontSize: '13px', marginBottom: '12px' }}>
+                            Email verified! Subscribe to access all 3 AI models.
+                          </p>
+                          <button
+                            onClick={startSubscription}
+                            disabled={authLoading}
+                            style={{
+                              padding: '12px 24px', fontSize: '15px', fontWeight: 600,
+                              borderRadius: '8px', border: 'none', cursor: 'pointer',
+                              background: '#059669', color: '#fff',
+                              opacity: authLoading ? 0.6 : 1,
+                            }}
+                          >
+                            {authLoading ? 'Redirecting...' : 'Subscribe — $10/month'}
+                          </button>
+                        </div>
+                      )}
+                      {authError && (
+                        <p style={{ color: '#dc2626', fontSize: '12px', margin: '6px 0 0' }}>{authError}</p>
+                      )}
+                    </div>
+                  ) : authMode === 'demo' ? (
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <input
@@ -650,9 +848,7 @@ export function V4App() {
                         >
                           {byokLoading ? 'Validating...' : 'Continue'}
                         </button>
-                        <span style={{ color: '#7aaa98', fontSize: '11px' }}>
-                          At least one key required
-                        </span>
+                        <span style={{ color: '#7aaa98', fontSize: '11px' }}>At least one key required</span>
                       </div>
                       {byokError && (
                         <p style={{ color: '#dc2626', fontSize: '12px', margin: '6px 0 0' }}>{byokError}</p>
@@ -718,11 +914,22 @@ export function V4App() {
           }}>
             <span style={{ fontSize: '15px', fontWeight: 700, color: '#0a1f18' }}>Project Swarm</span>
             <div style={{ flex: 1 }} />
+            {subscriberEmail && (
+              <button
+                type="button"
+                onClick={openPortal}
+                style={{
+                  background: 'none', border: 'none', color: '#7aaa98',
+                  fontSize: '12px', cursor: 'pointer', padding: '4px 8px',
+                }}
+              >
+                Manage Subscription
+              </button>
+            )}
             <button
               type="button"
               onClick={() => {
                 localStorage.clear();
-                // Hard reload — bypasses React state entirely
                 document.location.href = document.location.origin + '/?logout=' + Date.now();
               }}
               style={{
