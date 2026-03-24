@@ -168,11 +168,72 @@ export async function generatePriorMultiModel(
 /* ------------------------------------------------------------------ */
 /*  Multi-model persona voting                                         */
 /* ------------------------------------------------------------------ */
+/*  Segment generation via provider                                    */
+/* ------------------------------------------------------------------ */
 
 interface SegmentSpec {
   name: string;
   description: string;
   populationShare: number;
+}
+
+const SEGMENT_PROMPT = `Given a poll question, answer options, and user-provided audience segment descriptions, generate a structured segment framework.
+
+For each segment description provided, create a segment with:
+- A short name (2-4 words)
+- The user's description preserved
+- A realistic population share (percentages summing to 100)
+
+If only one segment is provided, give it 100% share.
+Population shares should reflect realistic prevalence — one dominant segment is fine.
+
+Return JSON: { "segments": [{ "name": "Short Name", "description": "User description", "populationShare": number }, ...] }`;
+
+export async function generateSegmentsViaProvider(
+  provider: LLMProvider,
+  question: string,
+  options: string[],
+  segmentDescriptions: string[],
+): Promise<SegmentSpec[] | null> {
+  const MAX_ATTEMPTS = 3;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const content = await provider.complete(
+        [
+          { role: 'system', content: SEGMENT_PROMPT },
+          {
+            role: 'user',
+            content: `Question: "${question}"\nOptions: ${options.join(', ')}\n\nSegment descriptions:\n${segmentDescriptions.map((d, i) => `${i + 1}. ${d}`).join('\n')}`,
+          },
+        ],
+        { temperature: 0, jsonMode: true },
+      );
+
+      if (!content) continue;
+
+      const parsed = JSON.parse(content);
+      const segs = parsed.segments;
+      if (!Array.isArray(segs) || segs.length < 1) continue;
+
+      const result: SegmentSpec[] = segs.map((s: Record<string, unknown>) => ({
+        name: String(s.name ?? ''),
+        description: String(s.description ?? ''),
+        populationShare: Number(s.populationShare) || Math.round(100 / segs.length),
+      }));
+
+      if (result.some((s) => !s.name.trim())) continue;
+
+      // Normalize shares to sum to 1.0
+      const total = result.reduce((sum, s) => sum + s.populationShare, 0);
+      for (const s of result) s.populationShare = s.populationShare / total;
+
+      return result;
+    } catch (err) {
+      console.warn(`[multi-model] Segment gen attempt ${attempt}:`, err);
+    }
+  }
+  return null;
 }
 
 const VOTES_PER_CALL = 10;

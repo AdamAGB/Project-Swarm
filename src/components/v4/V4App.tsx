@@ -1,8 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { generateOptionsExpanded } from '../../services/option-generator';
-import { generateSegmentsAndVariables } from '../../services/segment-generator';
 import { getAvailableProviders, getDemoProviders } from '../../services/llm-providers';
-import { generateOptionsMultiModel, runMultiModelVoting } from '../../services/multi-model';
+import { generateOptionsMultiModel, generateSegmentsViaProvider, runMultiModelVoting } from '../../services/multi-model';
 import type { PersonaVoteResult, PersonaVote } from '../../services/persona-vote-engine';
 import { createOpenAIClient } from '../../services/openai';
 import { VoteParticleViz, SEGMENT_COLORS } from '../v2/VoteParticleViz';
@@ -221,35 +220,29 @@ export function V4App() {
     segmentDescriptions?: string[],
     userShares?: number[],
   ) {
-    // Use OpenAI client for segment generation (needs OpenAI SDK format)
-    const client = keys.openai ? createOpenAIClient(keys.openai) : null;
-    if (!client) throw new Error('OpenAI key required for advanced mode segment generation');
+    if (!segmentDescriptions || segmentDescriptions.length === 0) {
+      throw new Error('No segment descriptions provided');
+    }
 
-    // Step 1: Build segments
+    // Step 1: Build segments via any available provider
     setProgressLabel('Building audience segments\u2026');
-    const fw = await generateSegmentsAndVariables(client, q, opts, [], segmentDescriptions);
-    if (!fw) throw new Error('Failed to generate audience segments');
+    const segs = await generateSegmentsViaProvider(providers[0], q, opts, segmentDescriptions);
+    if (!segs) throw new Error('Failed to generate audience segments');
 
     // Apply user population shares if provided
+    let segments = segs;
     if (userShares && userShares.length > 1) {
       const totalShare = userShares.reduce((sum, s) => sum + s, 0);
-      fw.segments = fw.segments.map((s, i) => ({
+      segments = segs.map((s, i) => ({
         ...s,
         populationShare: totalShare > 0 && i < userShares.length
           ? userShares[i] / totalShare
           : s.populationShare,
       }));
     }
-    setFramework(fw);
 
     // Step 2: Run persona voting (multi-model)
     setProgressLabel(`Polling 500 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
-
-    const segments = fw.segments.map((s) => ({
-      name: s.name,
-      description: s.description,
-      populationShare: s.populationShare,
-    }));
 
     const result = await runMultiModelVoting(providers, q, opts, segments, (done, total) => {
       setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
