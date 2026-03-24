@@ -271,6 +271,7 @@ async function fetchVoteBatch(
   batchId: number,
   temperature: number,
   segment?: SegmentSpec,
+  webContext?: string | null,
 ): Promise<PersonaVote[]> {
   const shuffled = shuffleArray(options);
   const optionKeys = shuffled.map((o) => `"${o}"`).join(', ');
@@ -279,7 +280,11 @@ async function fetchVoteBatch(
     ? `You are simulating ${count} diverse people who all belong to this audience segment:\n\n"${segment.name}: ${segment.description}"\n\nAssign probabilities realistically based on what people in this segment would actually think.`
     : `You are simulating ${count} diverse people from the general public — a realistic mix of ages, backgrounds, and perspectives.`;
 
-  const system = `${segmentClause}
+  const contextClause = webContext
+    ? `\n\nIMPORTANT CURRENT CONTEXT: ${webContext}\nUse this context when forming opinions. It reflects the latest known information about this topic.`
+    : '';
+
+  const system = `${segmentClause}${contextClause}
 
 Each person should express their preference on the poll question below as a probability distribution across the options. These are real people with real opinions — they will NOT all agree.
 
@@ -459,6 +464,7 @@ export async function runMultiModelVoting(
   segments: SegmentSpec[] | null,
   onProgress?: (completed: number, total: number) => void,
   totalVotes = 500,
+  webContext?: string | null,
 ): Promise<PersonaVoteResult> {
   // Build batch tasks
   const tasks: { segment?: SegmentSpec; count: number; batchId: number; providerIdx: number; temperature: number }[] = [];
@@ -507,7 +513,7 @@ export async function runMultiModelVoting(
     shuffledTasks.map(({ segment, count, batchId: bid, providerIdx, temperature: temp }) => async () => {
       const provider = providers[providerIdx];
       try {
-        const votes = await fetchVoteBatch(provider, question, options, count, bid, temp, segment);
+        const votes = await fetchVoteBatch(provider, question, options, count, bid, temp, segment, webContext);
         completed++;
         onProgress?.(completed, totalTasks);
         return votes;

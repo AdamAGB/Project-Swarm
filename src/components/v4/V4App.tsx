@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { getAvailableProviders, getDemoProviders, getSubscriberProviders } from '../../services/llm-providers';
 import { generateOptionsMultiModel, generateSegmentsViaProvider, runMultiModelVoting } from '../../services/multi-model';
+import { fetchWebContext } from '../../services/web-context';
 import type { PersonaVoteResult, PersonaVote } from '../../services/persona-vote-engine';
 import { VoteParticleViz, SEGMENT_COLORS } from '../v2/VoteParticleViz';
 import type {
@@ -347,12 +348,14 @@ export function V4App() {
       }));
     }
 
-    // Step 2: Run persona voting (multi-model)
-    setProgressLabel(`Polling 500 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
+    // Step 2: Fetch context + run persona voting (multi-model)
+    setProgressLabel('Gathering context\u2026');
+    const webContext = await fetchWebContext(providers[0], q, opts);
 
+    setProgressLabel(`Polling 500 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
     const result = await runMultiModelVoting(providers, q, opts, segments, (done, total) => {
       setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
-    }, 500);
+    }, 500, webContext);
 
     return result;
   }
@@ -374,11 +377,15 @@ export function V4App() {
       const opts = await generateOptionsMultiModel(providers, q);
       setOptions(opts);
 
+      // Fetch current context if needed
+      setProgressLabel('Gathering context\u2026');
+      const webContext = await fetchWebContext(providers[0], q, opts);
+
       // Run persona voting — no segments
       setProgressLabel(`Polling 200 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
       const result = await runMultiModelVoting(providers, q, opts, null, (done, total) => {
         setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
-      }, 200);
+      }, 200, webContext);
 
       setVoteResult(result);
       setResultKey((k) => k + 1);
@@ -450,11 +457,13 @@ export function V4App() {
           userShares,
         );
       } else {
-        // No segments — run general population voting
+        // No segments — gather context + run general population voting
+        setProgressLabel('Gathering context\u2026');
+        const webCtx = await fetchWebContext(providers[0], question.trim(), options);
         setProgressLabel(`Polling 200 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
         result = await runMultiModelVoting(providers, question.trim(), options, null, (done, total) => {
           setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
-        }, 200);
+        }, 200, webCtx);
       }
       setVoteResult(result);
       setResultKey((k) => k + 1);
