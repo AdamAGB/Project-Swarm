@@ -214,50 +214,40 @@ export function VoteParticleViz({ segmentVotes, aggregates, options, hideHeader 
       }
 
       // Render particles — in-flight with wobble, landed at neat stack positions
-      const OPACITY_BANDS = [0.3, 0.5, 0.7, 0.85, 1.0];
       const segCount = segmentVotes.length;
 
       for (let s = 0; s < segCount; s++) {
         const color = SEGMENT_COLORS[s % SEGMENT_COLORS.length];
-        for (const bandMax of OPACITY_BANDS) {
-          const bandMin = bandMax === OPACITY_BANDS[0] ? 0 : OPACITY_BANDS[OPACITY_BANDS.indexOf(bandMax) - 1];
-          ctx.globalAlpha = bandMax;
-          ctx.fillStyle = color;
-          ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.beginPath();
 
-          for (const p of ps) {
-            if (p.segmentIndex !== s) continue;
-            if (p.opacity <= bandMin || p.opacity > bandMax) continue;
+        for (const p of ps) {
+          if (p.segmentIndex !== s) continue;
 
-            const elapsed = frameCount - p.startFrame;
+          const elapsed = frameCount - p.startFrame;
 
-            if (elapsed <= 0) {
-              // Not started — draw at spawn
-              ctx.moveTo(p.sx + r, p.sy);
-              ctx.arc(p.sx, p.sy, r, 0, TAU);
-              continue;
-            }
-
-            if (p.landed) {
-              // Landed — draw at neat stack position
-              ctx.moveTo(p.finalX + r, p.finalY);
-              ctx.arc(p.finalX, p.finalY, r, 0, TAU);
-              continue;
-            }
-
-            // In flight — wobble toward column
-            const t = easeOutCubic(elapsed / p.duration);
-            const wobbleFade = (1 - t) * (1 - t);
-            const wobble = Math.sin(t * p.wobbleFreq * TAU + p.wobblePhase) * wobbleFade;
-            const x = p.sx + (p.tx - p.sx) * t + wobble * p.wobbleAmpX;
-            const y = p.sy + (p.ty - p.sy) * t + wobble * p.wobbleAmpY;
-            ctx.moveTo(x + r, y);
-            ctx.arc(x, y, r, 0, TAU);
+          if (elapsed <= 0) {
+            ctx.moveTo(p.sx + r, p.sy);
+            ctx.arc(p.sx, p.sy, r, 0, TAU);
+            continue;
           }
-          ctx.fill();
+
+          if (p.landed) {
+            ctx.moveTo(p.finalX + r, p.finalY);
+            ctx.arc(p.finalX, p.finalY, r, 0, TAU);
+            continue;
+          }
+
+          const t = easeOutCubic(elapsed / p.duration);
+          const wobbleFade = (1 - t) * (1 - t);
+          const wobble = Math.sin(t * p.wobbleFreq * TAU + p.wobblePhase) * wobbleFade;
+          const x = p.sx + (p.tx - p.sx) * t + wobble * p.wobbleAmpX;
+          const y = p.sy + (p.ty - p.sy) * t + wobble * p.wobbleAmpY;
+          ctx.moveTo(x + r, y);
+          ctx.arc(x, y, r, 0, TAU);
         }
+        ctx.fill();
       }
-      ctx.globalAlpha = 1;
 
       if (frameCount >= stopFrame) return;
       rafRef.current = requestAnimationFrame(animate);
