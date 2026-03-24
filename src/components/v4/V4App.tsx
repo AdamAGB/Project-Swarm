@@ -2,14 +2,13 @@ import { useState, useRef, useMemo } from 'react';
 import { generateOptionsExpanded } from '../../services/option-generator';
 import { generateSegmentsAndVariables } from '../../services/segment-generator';
 import { getAvailableProviders, getDemoProviders } from '../../services/llm-providers';
-import { generateOptionsMultiModel, generatePriorMultiModel, runMultiModelVoting } from '../../services/multi-model';
+import { generateOptionsMultiModel, runMultiModelVoting } from '../../services/multi-model';
 import type { PersonaVoteResult, PersonaVote } from '../../services/persona-vote-engine';
 import { createOpenAIClient } from '../../services/openai';
 import { VoteParticleViz, SEGMENT_COLORS } from '../v2/VoteParticleViz';
 import type {
   SegmentFramework,
   Segment,
-  PriorResult,
   V2SegmentVoteResult,
   V2VoteAggregates,
 } from '../../types/v2';
@@ -181,7 +180,6 @@ export function V4App() {
   const [progressLabel, setProgressLabel] = useState('');
   const [voteResult, setVoteResult] = useState<PersonaVoteResult | null>(null);
   const [resultKey, setResultKey] = useState(0);
-  const [, setPrior] = useState<PriorResult | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
   const [, setAdvanced] = useState(false);
@@ -244,7 +242,7 @@ export function V4App() {
     }
     setFramework(fw);
 
-    // Step 2: Generate prior + run persona voting in parallel (multi-model)
+    // Step 2: Run persona voting (multi-model)
     setProgressLabel(`Polling 500 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
 
     const segments = fw.segments.map((s) => ({
@@ -253,37 +251,9 @@ export function V4App() {
       populationShare: s.populationShare,
     }));
 
-    const [priorResult, result] = await Promise.all([
-      generatePriorMultiModel(providers, q, opts),
-      runMultiModelVoting(providers, q, opts, segments, (done, total) => {
-        setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
-      }, 500),
-    ]);
-
-    setPrior(priorResult);
-
-    // Apply Bayesian prior smoothing to the raw vote results
-    if (priorResult && priorResult.confidence > 0) {
-      const pseudoTotal = Math.round(priorResult.confidence * 50);
-      let smoothedTotal = 0;
-      for (const opt of opts) {
-        const raw = result.voteCounts[opt] ?? 0;
-        const pseudo = pseudoTotal * (priorResult.distribution[opt] ?? 1 / opts.length);
-        result.voteCounts[opt] = raw;
-        smoothedTotal += raw + pseudo;
-      }
-      for (const opt of opts) {
-        const raw = result.voteCounts[opt] ?? 0;
-        const pseudo = pseudoTotal * (priorResult.distribution[opt] ?? 1 / opts.length);
-        result.votePercentages[opt] = smoothedTotal > 0
-          ? ((raw + pseudo) / smoothedTotal) * 100
-          : 0;
-      }
-      // Winner based on raw vote counts, not smoothed percentages
-      result.winner = opts.reduce((best, opt) =>
-        (result.voteCounts[opt] ?? 0) > (result.voteCounts[best] ?? 0) ? opt : best,
-      );
-    }
+    const result = await runMultiModelVoting(providers, q, opts, segments, (done, total) => {
+      setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
+    }, 500);
 
     return result;
   }
@@ -298,7 +268,6 @@ export function V4App() {
     setProgressLabel(`Generating options across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
     setErrorMsg('');
     setVoteResult(null);
-    setPrior(null);
     setFramework(null);
 
     try {
@@ -306,36 +275,11 @@ export function V4App() {
       const opts = await generateOptionsMultiModel(providers, q);
       setOptions(opts);
 
-      // Run persona voting + prior in parallel — no segments
+      // Run persona voting — no segments
       setProgressLabel(`Polling 200 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
-      const [result, priorResult] = await Promise.all([
-        runMultiModelVoting(providers, q, opts, null, (done, total) => {
-          setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
-        }, 200),
-        generatePriorMultiModel(providers, q, opts),
-      ]);
-      setPrior(priorResult);
-
-      // Apply Bayesian prior smoothing
-      if (priorResult && priorResult.confidence > 0) {
-        const pseudoTotal = Math.round(priorResult.confidence * 50);
-        let smoothedTotal = 0;
-        for (const opt of opts) {
-          const raw = result.voteCounts[opt] ?? 0;
-          const pseudo = pseudoTotal * (priorResult.distribution[opt] ?? 1 / opts.length);
-          smoothedTotal += raw + pseudo;
-        }
-        for (const opt of opts) {
-          const raw = result.voteCounts[opt] ?? 0;
-          const pseudo = pseudoTotal * (priorResult.distribution[opt] ?? 1 / opts.length);
-          result.votePercentages[opt] = smoothedTotal > 0
-            ? ((raw + pseudo) / smoothedTotal) * 100
-            : 0;
-        }
-        result.winner = opts.reduce((best, opt) =>
-          (result.votePercentages[opt] ?? 0) > (result.votePercentages[best] ?? 0) ? opt : best,
-        );
-      }
+      const result = await runMultiModelVoting(providers, q, opts, null, (done, total) => {
+        setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
+      }, 200);
 
       setVoteResult(result);
       setResultKey((k) => k + 1);
@@ -357,7 +301,6 @@ export function V4App() {
     setLoadingLabel('Generating polling options\u2026');
     setErrorMsg('');
     setVoteResult(null);
-    setPrior(null);
     setFramework(null);
     setOptionPool([]);
 
@@ -418,30 +361,9 @@ export function V4App() {
       } else {
         // No segments — run general population voting
         setProgressLabel(`Polling 200 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
-        const [voteResult, priorResult] = await Promise.all([
-          runMultiModelVoting(providers, question.trim(), options, null, (done, total) => {
-            setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
-          }, 200),
-          generatePriorMultiModel(providers, question.trim(), options),
-        ]);
-        setPrior(priorResult);
-
-        if (priorResult && priorResult.confidence > 0) {
-          const pseudoTotal = Math.round(priorResult.confidence * 50);
-          let smoothedTotal = 0;
-          for (const opt of options) {
-            smoothedTotal += (voteResult.voteCounts[opt] ?? 0) + pseudoTotal * (priorResult.distribution[opt] ?? 1 / options.length);
-          }
-          for (const opt of options) {
-            const raw = voteResult.voteCounts[opt] ?? 0;
-            const pseudo = pseudoTotal * (priorResult.distribution[opt] ?? 1 / options.length);
-            voteResult.votePercentages[opt] = smoothedTotal > 0 ? ((raw + pseudo) / smoothedTotal) * 100 : 0;
-          }
-          voteResult.winner = options.reduce((best, opt) =>
-            (voteResult.votePercentages[opt] ?? 0) > (voteResult.votePercentages[best] ?? 0) ? opt : best,
-          );
-        }
-        result = voteResult;
+        result = await runMultiModelVoting(providers, question.trim(), options, null, (done, total) => {
+          setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
+        }, 200);
       }
       setVoteResult(result);
       setResultKey((k) => k + 1);
@@ -565,7 +487,6 @@ export function V4App() {
     setStep('input');
     setOptions([]);
     setVoteResult(null);
-    setPrior(null);
     setErrorMsg('');
     setAdvanced(false);
     setFramework(null);
