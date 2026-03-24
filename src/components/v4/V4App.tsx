@@ -1312,7 +1312,7 @@ export function V4App() {
                       >
                         <div className="v3-persona-header">
                           <span className="v3-persona-name">{p.name}{p.description && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: '6px', fontSize: '12px' }}>{p.description}</span>}</span>
-                          <span className="v3-persona-vote-pill">{p.vote}</span>
+                          <span className="v3-persona-vote-pill">{Object.entries(p.distribution).sort(([,a], [,b]) => b - a)[0]?.[0] ?? p.vote}</span>
                         </div>
                         <p className="v3-persona-comment">{p.reason}</p>
                       </div>
@@ -1342,7 +1342,7 @@ export function V4App() {
                 >
                   <div className="v3-persona-header">
                     <span className="v3-persona-name">{p.name}</span>
-                    <span className="v3-persona-vote-pill">{p.vote}</span>
+                    <span className="v3-persona-vote-pill">{Object.entries(p.distribution).sort(([,a], [,b]) => b - a)[0]?.[0] ?? p.vote}</span>
                   </div>
                   <p className="v3-persona-comment">{p.reason}</p>
                 </div>
