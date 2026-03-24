@@ -1,9 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
-import { generateOptionsExpanded } from '../../services/option-generator';
 import { getAvailableProviders, getDemoProviders, getSubscriberProviders } from '../../services/llm-providers';
 import { generateOptionsMultiModel, generateSegmentsViaProvider, runMultiModelVoting } from '../../services/multi-model';
 import type { PersonaVoteResult, PersonaVote } from '../../services/persona-vote-engine';
-import { createOpenAIClient } from '../../services/openai';
 import { VoteParticleViz, SEGMENT_COLORS } from '../v2/VoteParticleViz';
 import type {
   SegmentFramework,
@@ -406,17 +404,9 @@ export function V4App() {
     setOptionPool([]);
 
     try {
-      if (keys.openai) {
-        const client = createOpenAIClient(keys.openai);
-        const { shown, pool } = await generateOptionsExpanded(client, q, attachments);
-        setOptions(shown);
-        setOptionPool(pool);
-      } else {
-        // Fall back to multi-model option generation
-        const opts = await generateOptionsMultiModel(providers, q);
-        setOptions(opts);
-        setOptionPool([]);
-      }
+      const opts = await generateOptionsMultiModel(providers, q);
+      setOptions(opts);
+      setOptionPool([]);
       setStep('edit-options');
     } catch (err) {
       console.error('[V4App] Advanced options error:', err);
@@ -482,16 +472,9 @@ export function V4App() {
     setLoadingLabel('Regenerating options\u2026');
 
     try {
-      if (keys.openai) {
-        const client = createOpenAIClient(keys.openai);
-        const { shown, pool } = await generateOptionsExpanded(client, question.trim(), attachments);
-        setOptions(shown);
-        setOptionPool(pool);
-      } else {
-        const opts = await generateOptionsMultiModel(providers, question.trim());
-        setOptions(opts);
-        setOptionPool([]);
-      }
+      const opts = await generateOptionsMultiModel(providers, question.trim());
+      setOptions(opts);
+      setOptionPool([]);
       setStep('edit-options');
     } catch (err) {
       console.error('[V4App] Regenerate options error:', err);
