@@ -7,7 +7,7 @@ import type { PersonaVote, PersonaVoteResult, WriteInCluster, ConfidenceInterval
 /*  Multi-model option generation                                      */
 /* ------------------------------------------------------------------ */
 
-const OPTION_GEN_PROMPT = `You generate concise polling answer options for survey questions. Given a question, produce 4-6 short, distinct answer options that cover the realistic range of responses. Return JSON: { "options": ["Option 1", "Option 2", ...] }. Each option should be 1-5 words. Do not number them.
+const OPTION_GEN_PROMPT = `You generate concise polling answer options for survey questions. Given a question, produce exactly 5 short, distinct answer options that cover the realistic range of responses. Return JSON: { "options": ["Option 1", "Option 2", ...] }. Each option should be 1-5 words. Do not number them.
 
 CRITICAL: Options must be specific, concrete things — not abstract categories or descriptions. For example:
 - If asked about dog breeds, say "Golden Retriever" not "Medium-sized calm breed"

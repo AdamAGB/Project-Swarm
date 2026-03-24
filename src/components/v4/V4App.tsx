@@ -1186,10 +1186,12 @@ export function V4App() {
 
           <div className="v2-vote-stats-row">
             {options.map((opt) => {
-              const isWinner = opt === v2Data.aggregates.winner;
+              const ranked = [...options].sort((a, b) => (voteResult?.voteCounts[b] ?? 0) - (voteResult?.voteCounts[a] ?? 0));
+              const rank = ranked.indexOf(opt);
+              const label = rank === 0 ? 'Winner' : rank === 1 ? '2nd Place' : rank === 2 ? '3rd Place' : null;
               return (
-                <div key={opt} className={`v2-vote-stat-card ${isWinner ? 'winner' : ''}`}>
-                  {isWinner && <span className="v2-winner-badge">Winner</span>}
+                <div key={opt} className={`v2-vote-stat-card ${rank === 0 ? 'winner' : ''}`}>
+                  {label && <span className="v2-winner-badge">{label}</span>}
                   <span className="v2-stat-option">{opt}</span>
                   <span className="v2-stat-count">
                     {(voteResult?.voteCounts[opt] ?? 0).toLocaleString()} votes
