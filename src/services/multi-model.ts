@@ -248,18 +248,6 @@ function shuffleArray<T>(arr: T[]): T[] {
   return copy;
 }
 
-function sampleFromDistribution(
-  distribution: Record<string, number>,
-  options: string[],
-): string {
-  const r = Math.random();
-  let cumulative = 0;
-  for (const opt of options) {
-    cumulative += distribution[opt] ?? 0;
-    if (r <= cumulative) return opt;
-  }
-  return options[options.length - 1];
-}
 
 const BATCH_TEMPERATURES = [0.7, 0.9, 0.9, 1.1];
 
@@ -292,7 +280,7 @@ Rules:
 - Generate exactly ${count} personas
 - Each persona provides a probability distribution over ALL options (values must sum to 1.0, use EXACT option text as keys)
 - A persona who strongly prefers one option might be 0.8/0.1/0.1. Someone torn might be 0.4/0.35/0.25. Someone who'd never pick an option should give it 0.0 or near-zero.
-- Each persona gets a short "desc" (age and occupation, 5 words max, e.g. "34, marketing manager" or "22, college student")
+- Each persona gets a short "desc" with their age and occupation only (5 words max, e.g. "34, marketing manager" or "22, college student"). Never put a location, city, or any poll option in the desc field.
 - Vary the names, ages, occupations, and reasoning
 - Be honest: if most people would reject an option, most personas should give it low probability
 - Include diverse opinions — real groups are never unanimous
@@ -340,7 +328,10 @@ Return JSON: { "votes": [{ "name": "First name", "desc": "Age, occupation", "dis
         for (const opt of options) distribution[opt] = 1 / options.length;
       }
 
-      const vote = sampleFromDistribution(distribution, options);
+      // Top preference — used for persona card display only; aggregates use averaged distributions
+      const vote = options.reduce((best, opt) =>
+        (distribution[opt] ?? 0) > (distribution[best] ?? 0) ? opt : best,
+      );
 
       const rawWriteIn = v.write_in ?? v.writeIn ?? null;
       let writeIn: string | null = null;
@@ -528,6 +519,23 @@ export async function runMultiModelVoting(
   );
 
   const allPersonas = batchResults.flat();
+  const totalVotesActual = allPersonas.length;
+
+  // Average distributions instead of counting discrete votes
+  function averageDistributions(personas: PersonaVote[]): { pcts: Record<string, number>; counts: Record<string, number> } {
+    const pcts: Record<string, number> = {};
+    const counts: Record<string, number> = {};
+    if (personas.length === 0) {
+      for (const opt of options) { pcts[opt] = 0; counts[opt] = 0; }
+      return { pcts, counts };
+    }
+    for (const opt of options) {
+      const avg = personas.reduce((sum, p) => sum + (p.distribution[opt] ?? 0), 0) / personas.length;
+      pcts[opt] = avg * 100;
+      counts[opt] = Math.round(avg * personas.length);
+    }
+    return { pcts, counts };
+  }
 
   // Tally per segment
   const tallyGroups = segments && segments.length > 0
@@ -536,19 +544,10 @@ export async function runMultiModelVoting(
   const totalShare = tallyGroups.reduce((sum, s) => sum + s.populationShare, 0);
 
   const segmentTallies = tallyGroups.map((seg) => {
-    const segVotes = allPersonas.filter((p) => p.segment === seg.name);
-    const counts: Record<string, number> = {};
-    for (const opt of options) counts[opt] = 0;
-    for (const v of segVotes) {
-      if (counts[v.vote] !== undefined) counts[v.vote]++;
-    }
-    const total = segVotes.length;
-    const pcts: Record<string, number> = {};
-    for (const opt of options) {
-      pcts[opt] = total > 0 ? (counts[opt] / total) * 100 : 0;
-    }
+    const segPersonas = allPersonas.filter((p) => p.segment === seg.name);
+    const { pcts, counts } = averageDistributions(segPersonas);
     const winner = options.reduce((best, opt) =>
-      (counts[opt] ?? 0) > (counts[best] ?? 0) ? opt : best,
+      (pcts[opt] ?? 0) > (pcts[best] ?? 0) ? opt : best,
     );
     return {
       segmentName: seg.name,
@@ -556,27 +555,17 @@ export async function runMultiModelVoting(
       populationShare: seg.populationShare / totalShare,
       voteCounts: counts,
       votePercentages: pcts,
-      totalVotes: total,
+      totalVotes: segPersonas.length,
       winnerInSegment: winner,
-      personas: segVotes,
+      personas: segPersonas,
     };
   });
 
-  const rawCounts: Record<string, number> = {};
-  for (const opt of options) rawCounts[opt] = 0;
-  for (const v of allPersonas) {
-    if (rawCounts[v.vote] !== undefined) rawCounts[v.vote]++;
-  }
+  // Overall percentages from averaged distributions
+  const { pcts: finalPcts, counts: finalCounts } = averageDistributions(allPersonas);
 
-  const totalVotesActual = allPersonas.length;
-  const finalPcts: Record<string, number> = {};
-  for (const opt of options) {
-    finalPcts[opt] = totalVotesActual > 0 ? (rawCounts[opt] / totalVotesActual) * 100 : 0;
-  }
-
-  // Winner based on raw vote counts, not percentages
   const winner = options.reduce((best, opt) =>
-    (rawCounts[opt] ?? 0) > (rawCounts[best] ?? 0) ? opt : best,
+    (finalPcts[opt] ?? 0) > (finalPcts[best] ?? 0) ? opt : best,
   );
 
   const confidenceIntervals = computeConfidenceIntervals(allPersonas, options);
@@ -596,7 +585,7 @@ export async function runMultiModelVoting(
 
   return {
     totalVotes: totalVotesActual,
-    voteCounts: rawCounts,
+    voteCounts: finalCounts,
     votePercentages: finalPcts,
     confidenceIntervals,
     isUnstable,

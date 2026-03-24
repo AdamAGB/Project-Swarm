@@ -58,8 +58,8 @@ function toV2VoteData(result: PersonaVoteResult): {
     winnerInSegment: t.winnerInSegment,
   }));
 
-  // Winner determined by raw vote counts, not smoothed percentages
-  const sorted = Object.entries(result.voteCounts).sort(([, a], [, b]) => b - a);
+  // Winner determined by averaged distribution percentages
+  const sorted = Object.entries(result.votePercentages).sort(([, a], [, b]) => b - a);
   const winner = sorted[0]?.[0] ?? '';
   const runnerUp = sorted[1]?.[0] ?? winner;
 
@@ -1195,7 +1195,7 @@ export function V4App() {
 
           <div className="v2-vote-stats-row">
             {options.map((opt) => {
-              const ranked = [...options].sort((a, b) => (voteResult?.voteCounts[b] ?? 0) - (voteResult?.voteCounts[a] ?? 0));
+              const ranked = [...options].sort((a, b) => (voteResult?.votePercentages[b] ?? 0) - (voteResult?.votePercentages[a] ?? 0));
               const rank = ranked.indexOf(opt);
               const label = rank === 0 ? 'Winner' : rank === 1 ? '2nd Place' : rank === 2 ? '3rd Place' : null;
               return (
@@ -1312,7 +1312,7 @@ export function V4App() {
                       >
                         <div className="v3-persona-header">
                           <span className="v3-persona-name">{p.name}{p.description && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: '6px', fontSize: '12px' }}>{p.description}</span>}</span>
-                          <span className="v3-persona-vote-pill">{Object.entries(p.distribution).sort(([,a], [,b]) => b - a)[0]?.[0] ?? p.vote}</span>
+                          <span className="v3-persona-vote-pill">{p.vote}</span>
                         </div>
                         <p className="v3-persona-comment">{p.reason}</p>
                       </div>
@@ -1342,7 +1342,7 @@ export function V4App() {
                 >
                   <div className="v3-persona-header">
                     <span className="v3-persona-name">{p.name}</span>
-                    <span className="v3-persona-vote-pill">{Object.entries(p.distribution).sort(([,a], [,b]) => b - a)[0]?.[0] ?? p.vote}</span>
+                    <span className="v3-persona-vote-pill">{p.vote}</span>
                   </div>
                   <p className="v3-persona-comment">{p.reason}</p>
                 </div>
