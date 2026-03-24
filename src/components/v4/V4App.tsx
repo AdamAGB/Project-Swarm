@@ -295,6 +295,8 @@ export function V4App() {
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [showAllWriteIns, setShowAllWriteIns] = useState(false);
+  const [personaFilter, setPersonaFilter] = useState<string | null>(null);
+  const [showAllPersonas, setShowAllPersonas] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const MAX_ATTACHMENTS = 10;
@@ -588,6 +590,8 @@ export function V4App() {
     setAttachments([]);
     setProgressLabel('');
     setShowAllWriteIns(false);
+    setPersonaFilter(null);
+    setShowAllPersonas(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -1264,9 +1268,6 @@ export function V4App() {
                 ))}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                <p style={{ margin: 0, fontSize: '12px', color: '#555' }}>
-                  {voteResult.allPersonas.filter((p) => p.writeIn).length} of {voteResult.totalVotes} voters suggested a write-in
-                </p>
                 {voteResult.writeInClusters.length > 5 && (
                   <button
                     onClick={() => setShowAllWriteIns(!showAllWriteIns)}
@@ -1286,74 +1287,133 @@ export function V4App() {
             </div>
           )}
 
-          {voteResult && hasSegments ? (
+          {voteResult && voteResult.allPersonas.length > 0 && (
             <div className="v3-persona-section">
-              {voteResult.segmentTallies.map((tally, segIdx) => {
-                const segPersonas = personasBySegment[tally.segmentName];
-                if (!segPersonas || segPersonas.length === 0) return null;
-                const sample = segPersonas.slice(0, 6);
-                return (
-                  <div key={tally.segmentName} className="v3-persona-group">
-                    <h3 className="v3-persona-group-header">
-                      <span
-                        className="v2-legend-dot"
-                        style={{ backgroundColor: SEGMENT_COLORS[segIdx % SEGMENT_COLORS.length] }}
-                      />
-                      {tally.segmentName}
-                      <span style={{ fontWeight: 400, color: '#888', fontSize: '13px', marginLeft: '8px' }}>
-                        {tally.totalVotes} voters
-                      </span>
-                    </h3>
-                    {sample.map((p, i) => (
-                      <div
-                        key={`${p.name}-${i}`}
-                        className="v3-persona-card"
-                        style={{ animationDelay: `${(segIdx * 6 + i) * 0.05}s` }}
-                      >
-                        <div className="v3-persona-header">
-                          <span className="v3-persona-name">{p.name}{p.description && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: '6px', fontSize: '12px' }}>{p.description}</span>}</span>
-                          <span className="v3-persona-vote-pill">{p.vote}</span>
-                        </div>
-                        <p className="v3-persona-comment">{p.reason}</p>
-                      </div>
-                    ))}
-                    {segPersonas.length > 6 && (
-                      <p style={{ color: '#666', fontSize: '13px', margin: '4px 0 0 12px' }}>
-                        +{segPersonas.length - 6} more voters in this segment
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : voteResult ? (
-            <div className="v3-persona-section">
-              <h3 style={{ margin: '0 0 12px', fontSize: '15px', color: '#ccc' }}>
-                Sample voters
-                <span style={{ fontWeight: 400, color: '#888', fontSize: '13px', marginLeft: '8px' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: '15px', color: 'var(--color-text)' }}>
+                Voter Responses
+                <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '13px', marginLeft: '8px' }}>
                   {voteResult.totalVotes} total
                 </span>
               </h3>
-              {voteResult.allPersonas.slice(0, 12).map((p, i) => (
-                <div
-                  key={`${p.name}-${i}`}
-                  className="v3-persona-card"
-                  style={{ animationDelay: `${i * 0.05}s` }}
+
+              {/* Filter tabs */}
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setPersonaFilter(null)}
+                  style={{
+                    padding: '5px 12px', fontSize: '12px', borderRadius: '6px', cursor: 'pointer',
+                    border: personaFilter === null ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                    background: personaFilter === null ? 'var(--color-surface-alt)' : 'var(--color-surface)',
+                    color: personaFilter === null ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  }}
                 >
-                  <div className="v3-persona-header">
-                    <span className="v3-persona-name">{p.name}</span>
-                    <span className="v3-persona-vote-pill">{p.vote}</span>
-                  </div>
-                  <p className="v3-persona-comment">{p.reason}</p>
-                </div>
-              ))}
-              {voteResult.allPersonas.length > 12 && (
-                <p style={{ color: '#666', fontSize: '13px', margin: '4px 0 0 12px' }}>
-                  +{voteResult.allPersonas.length - 12} more voters
-                </p>
-              )}
+                  All
+                </button>
+                {options.map((opt) => {
+                  const count = voteResult.allPersonas.filter((p) => p.vote === opt).length;
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => setPersonaFilter(opt)}
+                      style={{
+                        padding: '5px 12px', fontSize: '12px', borderRadius: '6px', cursor: 'pointer',
+                        border: personaFilter === opt ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        background: personaFilter === opt ? 'var(--color-surface-alt)' : 'var(--color-surface)',
+                        color: personaFilter === opt ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                      }}
+                    >
+                      {opt} ({count})
+                    </button>
+                  );
+                })}
+                {hasSegments && voteResult.segmentTallies.map((t) => (
+                  <button
+                    key={`seg-${t.segmentName}`}
+                    onClick={() => setPersonaFilter(`segment:${t.segmentName}`)}
+                    style={{
+                      padding: '5px 12px', fontSize: '12px', borderRadius: '6px', cursor: 'pointer',
+                      border: personaFilter === `segment:${t.segmentName}` ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                      background: personaFilter === `segment:${t.segmentName}` ? 'var(--color-surface-alt)' : 'var(--color-surface)',
+                      color: personaFilter === `segment:${t.segmentName}` ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {t.segmentName}
+                  </button>
+                ))}
+              </div>
+
+              {/* Filtered persona list */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '8px' }}>
+                {(() => {
+                  let filtered = voteResult.allPersonas;
+                  if (personaFilter) {
+                    if (personaFilter.startsWith('segment:')) {
+                      const seg = personaFilter.slice(8);
+                      filtered = filtered.filter((p) => p.segment === seg);
+                    } else {
+                      filtered = filtered.filter((p) => p.vote === personaFilter);
+                    }
+                  }
+                  const shown = showAllPersonas ? filtered : filtered.slice(0, 24);
+                  return (
+                    <>
+                      {shown.map((p, i) => (
+                        <div
+                          key={`${p.name}-${i}`}
+                          style={{
+                            padding: '10px 12px', borderRadius: '8px',
+                            border: '1px solid var(--color-border)',
+                            background: 'var(--color-surface)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)' }}>
+                              {p.name}
+                              {p.description && (
+                                <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: '5px', fontSize: '11px' }}>{p.description}</span>
+                              )}
+                            </span>
+                            <span style={{
+                              fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px',
+                              background: 'var(--color-surface-alt)', color: 'var(--color-primary)',
+                            }}>
+                              {p.vote}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4 }}>{p.reason}</p>
+                        </div>
+                      ))}
+                      {!showAllPersonas && filtered.length > 24 && (
+                        <button
+                          onClick={() => setShowAllPersonas(true)}
+                          style={{
+                            padding: '10px', borderRadius: '8px', gridColumn: '1 / -1',
+                            border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                            color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer',
+                          }}
+                        >
+                          Show all {filtered.length} responses
+                        </button>
+                      )}
+                      {showAllPersonas && filtered.length > 24 && (
+                        <button
+                          onClick={() => setShowAllPersonas(false)}
+                          style={{
+                            padding: '10px', borderRadius: '8px', gridColumn: '1 / -1',
+                            border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                            color: 'var(--color-text-muted)', fontSize: '13px', cursor: 'pointer',
+                          }}
+                        >
+                          Show less
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
-          ) : null}
+          )}
         </div>
       ) : null}
     </div>
