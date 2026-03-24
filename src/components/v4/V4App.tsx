@@ -20,21 +20,21 @@ import './V4App.css';
 type Step = 'input' | 'loading' | 'edit-options' | 'edit-segments' | 'results' | 'error';
 
 /* Hero viz mock data */
-const HERO_OPTIONS = ['Red', 'Blue', 'Clear', 'Orange', 'Brown'];
+const HERO_OPTIONS = ['SoHo', 'Flatiron', 'Williamsburg', 'FiDi', 'LIC'];
 const heroMockData = (() => {
-  const counts: Record<string, number> = { 'Red': 72, 'Blue': 48, 'Clear': 38, 'Orange': 28, 'Brown': 14 };
+  const counts: Record<string, number> = { 'SoHo': 58, 'Flatiron': 52, 'Williamsburg': 44, 'FiDi': 30, 'LIC': 16 };
   const total = Object.values(counts).reduce((s, v) => s + v, 0);
   const pcts: Record<string, number> = {};
   for (const [k, v] of Object.entries(counts)) pcts[k] = (v / total) * 100;
   return {
     segmentVotes: [{
       segmentName: 'General', populationShare: 1, votesAllocated: total,
-      voteCounts: counts, votePercentages: pcts, preferenceScores: counts, winnerInSegment: 'Red',
+      voteCounts: counts, votePercentages: pcts, preferenceScores: counts, winnerInSegment: 'SoHo',
     }] as V2SegmentVoteResult[],
     aggregates: {
       totalVotes: total, voteCounts: counts, votePercentages: pcts,
-      winner: 'Red', winnerCount: 72, winnerPercentage: pcts['Red'],
-      runnerUp: 'Blue', runnerUpCount: 48, runnerUpPercentage: pcts['Blue'],
+      winner: 'SoHo', winnerCount: 58, winnerPercentage: pcts['SoHo'],
+      runnerUp: 'Flatiron', runnerUpCount: 52, runnerUpPercentage: pcts['Flatiron'],
     } as V2VoteAggregates,
   };
 })();
@@ -859,7 +859,7 @@ export function V4App() {
               display: 'flex', flexDirection: 'column',
             }}>
               <p style={{ textAlign: 'center', fontSize: '16px', fontWeight: 600, color: '#0a1f18', margin: '0 0 12px' }}>
-                What's the best gummy bear color?
+                What's the best neighborhood for startups in NYC?
               </p>
               <VoteParticleViz
                 segmentVotes={heroMockData.segmentVotes}
