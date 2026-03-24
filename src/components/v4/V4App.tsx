@@ -61,7 +61,8 @@ function toV2VoteData(result: PersonaVoteResult): {
     winnerInSegment: t.winnerInSegment,
   }));
 
-  const sorted = Object.entries(result.votePercentages).sort(([, a], [, b]) => b - a);
+  // Winner determined by raw vote counts, not smoothed percentages
+  const sorted = Object.entries(result.voteCounts).sort(([, a], [, b]) => b - a);
   const winner = sorted[0]?.[0] ?? '';
   const runnerUp = sorted[1]?.[0] ?? winner;
 
@@ -278,8 +279,9 @@ export function V4App() {
           ? ((raw + pseudo) / smoothedTotal) * 100
           : 0;
       }
+      // Winner based on raw vote counts, not smoothed percentages
       result.winner = opts.reduce((best, opt) =>
-        (result.votePercentages[opt] ?? 0) > (result.votePercentages[best] ?? 0) ? opt : best,
+        (result.voteCounts[opt] ?? 0) > (result.voteCounts[best] ?? 0) ? opt : best,
       );
     }
 

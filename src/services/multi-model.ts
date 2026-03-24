@@ -507,8 +507,9 @@ export async function runMultiModelVoting(
     finalPcts[opt] = totalVotesActual > 0 ? (rawCounts[opt] / totalVotesActual) * 100 : 0;
   }
 
+  // Winner based on raw vote counts, not percentages
   const winner = options.reduce((best, opt) =>
-    (finalPcts[opt] ?? 0) > (finalPcts[best] ?? 0) ? opt : best,
+    (rawCounts[opt] ?? 0) > (rawCounts[best] ?? 0) ? opt : best,
   );
 
   const confidenceIntervals = computeConfidenceIntervals(allPersonas, options);
