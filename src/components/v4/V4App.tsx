@@ -350,7 +350,7 @@ export function V4App() {
 
     // Step 2: Fetch context + run persona voting (multi-model)
     setProgressLabel('Gathering context\u2026');
-    const webContext = await fetchWebContext(providers[0], q, opts);
+    const webContext = await fetchWebContext(providers[0], q, opts, keys.gemini || undefined, { inviteCode: inviteCode || undefined, subscriberEmail: subscriberEmail || undefined });
 
     setProgressLabel(`Polling 500 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
     const result = await runMultiModelVoting(providers, q, opts, segments, (done, total) => {
@@ -379,7 +379,7 @@ export function V4App() {
 
       // Fetch current context if needed
       setProgressLabel('Gathering context\u2026');
-      const webContext = await fetchWebContext(providers[0], q, opts);
+      const webContext = await fetchWebContext(providers[0], q, opts, keys.gemini || undefined, { inviteCode: inviteCode || undefined, subscriberEmail: subscriberEmail || undefined });
 
       // Run persona voting — no segments
       setProgressLabel(`Polling 200 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
@@ -459,7 +459,7 @@ export function V4App() {
       } else {
         // No segments — gather context + run general population voting
         setProgressLabel('Gathering context\u2026');
-        const webCtx = await fetchWebContext(providers[0], question.trim(), options);
+        const webCtx = await fetchWebContext(providers[0], question.trim(), options, keys.gemini || undefined, { inviteCode: inviteCode || undefined, subscriberEmail: subscriberEmail || undefined });
         setProgressLabel(`Polling 200 voters across ${providers.length} model${providers.length > 1 ? 's' : ''}\u2026`);
         result = await runMultiModelVoting(providers, question.trim(), options, null, (done, total) => {
           setProgressLabel(`Polling voters\u2026 ${Math.round((done / total) * 100)}%`);
