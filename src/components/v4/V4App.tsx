@@ -1204,7 +1204,11 @@ export function V4App() {
               const label = rank === 0 ? 'Winner' : rank === 1 ? '2nd Place' : rank === 2 ? '3rd Place' : null;
               return (
                 <div key={opt} className={`v2-vote-stat-card ${rank === 0 ? 'winner' : ''}`}>
-                  {label && <span className="v2-winner-badge">{label}</span>}
+                  {label && <span className="v2-winner-badge" style={
+                    rank === 1 ? { background: '#6b7280' } :
+                    rank === 2 ? { background: '#a87c4f' } :
+                    undefined
+                  }>{label}</span>}
                   <span className="v2-stat-option">{opt}</span>
                   <span className="v2-stat-count">
                     {(voteResult?.voteCounts[opt] ?? 0).toLocaleString()} votes
