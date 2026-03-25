@@ -154,6 +154,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: 'Invalid access' });
   }
 
+  // Content moderation — check user messages for policy violations
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey && body.messages) {
+    const userText = body.messages
+      .filter((m) => m.role === 'user')
+      .map((m) => m.content)
+      .join('\n');
+
+    if (userText.trim()) {
+      try {
+        const modRes = await fetch('https://api.openai.com/v1/moderations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+          body: JSON.stringify({ input: userText }),
+        });
+        if (modRes.ok) {
+          const modData = await modRes.json();
+          const flagged = modData.results?.[0]?.flagged;
+          if (flagged) {
+            const categories = modData.results[0].categories;
+            const flaggedCategories = Object.entries(categories)
+              .filter(([, v]) => v)
+              .map(([k]) => k)
+              .join(', ');
+            console.warn(`[chat] Content flagged: ${flaggedCategories} | IP: ${(req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown'}`);
+            return res.status(400).json({ error: 'Your question was flagged for potentially inappropriate content. Please rephrase and try again.' });
+          }
+        }
+      } catch (err) {
+        // Don't block on moderation failure — log and continue
+        console.warn('[chat] Moderation check failed:', err);
+      }
+    }
+  }
+
   // Rate limit
   const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
   if (!checkRateLimit(ip)) {

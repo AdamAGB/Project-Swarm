@@ -34,6 +34,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: 'Invalid access' });
   }
 
+  // Content moderation
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey && question) {
+    try {
+      const modRes = await fetch('https://api.openai.com/v1/moderations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+        body: JSON.stringify({ input: question }),
+      });
+      if (modRes.ok) {
+        const modData = await modRes.json();
+        if (modData.results?.[0]?.flagged) {
+          return res.status(400).json({ error: 'Content flagged', context: null });
+        }
+      }
+    } catch { /* continue on failure */ }
+  }
+
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey) {
     return res.status(200).json({ context: null });
