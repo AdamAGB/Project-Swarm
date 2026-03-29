@@ -51,10 +51,15 @@ Rules:
 Return JSON: { "first": [...], "second": [...], "third": [...] }
 Each effect: { "category": "...", "title": "...", "description": "...", "timeframe": "...", "likelihood": "high|medium|low", "triggers": ["upstream title", ...] }`;
 
+  const isUrl = /^https?:\/\//i.test(news.trim());
+  const userContent = isUrl
+    ? `URL: ${news.trim()}\n\nFetch or use your knowledge of the article at this URL. Identify the key news event, then map its cascading effects.`
+    : `News: "${news}"`;
+
   const content = await provider.complete(
     [
       { role: 'system', content: system },
-      { role: 'user', content: `News: "${news}"` },
+      { role: 'user', content: userContent },
     ],
     { temperature: 0.8, jsonMode: true, maxTokens: 8192 },
   );
@@ -247,7 +252,7 @@ export function EffectsApp() {
           <div className="effects-input-wrap">
             <textarea
               className="effects-textarea"
-              placeholder="Paste a news headline or describe an event...&#10;&#10;e.g. &quot;NVIDIA announces 50% price cut on all consumer GPUs&quot;"
+              placeholder="Paste a news headline, describe an event, or drop a URL...&#10;&#10;e.g. &quot;NVIDIA announces 50% price cut on all consumer GPUs&quot;&#10;or https://example.com/article"
               value={news}
               onChange={(e) => setNews(e.target.value)}
               onKeyDown={(e) => {
