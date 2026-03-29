@@ -38,10 +38,11 @@ async function analyzeEffects(
   const system = `You are a world-class strategic analyst. Given a news item, map out its cascading effects across three orders of impact.
 
 Rules:
-- 1st order: 4-5 direct, immediate consequences of this news
-- 2nd order: 5-6 effects caused by the 1st-order effects
-- 3rd order: 5-6 downstream effects caused by the 2nd-order effects
-- Each effect needs: category (e.g. "Markets", "Geopolitics", "Technology", "Labor", "Consumer", "Regulation", "Culture", "Environment", "Security"), title (short, punchy, 3-8 words), description (1-2 sentences explaining the mechanism), timeframe (e.g. "Days", "Weeks", "1-3 months", "6-12 months", "1-3 years"), likelihood ("high", "medium", or "low")
+- 1st order: 3-4 direct, immediate consequences of this news
+- 2nd order: 4-5 effects caused by the 1st-order effects
+- 3rd order: 4-5 downstream effects caused by the 2nd-order effects
+- Each effect needs: category (e.g. "Markets", "Geopolitics", "Tech", "Labor", "Consumer", "Regulation", "Culture"), title (3-6 words), description (1 sentence, under 20 words), timeframe (e.g. "Days", "Weeks", "1-3 months", "6-12 months"), likelihood ("high", "medium", or "low")
+- Keep descriptions SHORT. No quotes or special characters inside strings.
 - 2nd and 3rd order effects must include a "triggers" array with the exact title(s) of the upstream effect(s) that cause them
 - 1st order effects have an empty triggers array
 - Be specific and concrete, not generic. Name companies, sectors, regions where relevant.
@@ -55,12 +56,33 @@ Each effect: { "category": "...", "title": "...", "description": "...", "timefra
       { role: 'system', content: system },
       { role: 'user', content: `News: "${news}"` },
     ],
-    { temperature: 0.8, jsonMode: true, maxTokens: 4096 },
+    { temperature: 0.8, jsonMode: true, maxTokens: 8192 },
   );
 
   if (!content) throw new Error('No response from model');
-  const parsed = JSON.parse(content);
-  return parsed as EffectsResult;
+
+  // Try parsing, and if truncated try to repair by closing open brackets
+  let parsed: EffectsResult;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    // Attempt to repair truncated JSON
+    let repaired = content.trim();
+    // Close any open strings
+    const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
+    if (quoteCount % 2 !== 0) repaired += '"';
+    // Close open structures
+    const opens = (repaired.match(/[{[]/g) || []).length;
+    const closes = (repaired.match(/[}\]]/g) || []).length;
+    for (let i = 0; i < opens - closes; i++) {
+      // Guess based on last open bracket
+      const lastOpen = Math.max(repaired.lastIndexOf('{'), repaired.lastIndexOf('['));
+      repaired += repaired[lastOpen] === '{' ? '}' : ']';
+    }
+    parsed = JSON.parse(repaired);
+  }
+
+  return parsed;
 }
 
 /* ------------------------------------------------------------------ */
