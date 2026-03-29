@@ -8,12 +8,14 @@ import { HomepageDemo } from './components/viz/HomepageDemo';
 import { InputPageDemo } from './components/viz/InputPageDemo';
 import { ColorDemo } from './components/viz/ColorDemo';
 import { LightThemeDemo } from './components/viz/LightThemeDemo';
+import { EffectsApp } from './components/effects/EffectsApp';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<V4App />} />
+        <Route path="/effects" element={<EffectsApp />} />
         <Route path="/viz" element={<VizDemo />} />
         <Route path="/homepage" element={<HomepageDemo />} />
         <Route path="/input" element={<InputPageDemo />} />
