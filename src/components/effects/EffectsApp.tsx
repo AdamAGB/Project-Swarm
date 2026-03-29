@@ -18,7 +18,6 @@ interface Effect {
   description: string;
   timeframe: string;
   likelihood: 'high' | 'medium' | 'low';
-  triggers: string[]; // titles of effects that cause this one
 }
 
 interface EffectsResult {
@@ -35,21 +34,18 @@ async function analyzeEffects(
   provider: LLMProvider,
   news: string,
 ): Promise<EffectsResult> {
-  const system = `You are a world-class strategic analyst. Given a news item, map out its cascading effects across three orders of impact.
+  const system = `You are a strategic analyst. Map cascading effects of a news event.
+
+Return ONLY valid JSON. No markdown, no commentary.
 
 Rules:
-- 1st order: 3-4 direct, immediate consequences of this news
-- 2nd order: 4-5 effects caused by the 1st-order effects
-- 3rd order: 4-5 downstream effects caused by the 2nd-order effects
-- Each effect needs: category (e.g. "Markets", "Geopolitics", "Tech", "Labor", "Consumer", "Regulation", "Culture"), title (3-6 words), description (1 sentence, under 20 words), timeframe (e.g. "Days", "Weeks", "1-3 months", "6-12 months"), likelihood ("high", "medium", or "low")
-- Keep descriptions SHORT. No quotes or special characters inside strings.
-- 2nd and 3rd order effects must include a "triggers" array with the exact title(s) of the upstream effect(s) that cause them
-- 1st order effects have an empty triggers array
-- Be specific and concrete, not generic. Name companies, sectors, regions where relevant.
-- Think creatively about non-obvious cascading consequences
+- first: 3 direct immediate effects
+- second: 4 effects caused by the 1st-order ones
+- third: 4 downstream effects caused by the 2nd-order ones
+- Each effect: category (one word like Markets, Tech, Labor, Regulation, Culture, Geopolitics, Consumer, Environment), title (3-6 words), description (under 15 words, no quotes inside), timeframe (Days, Weeks, 1-3 months, 6-12 months, or 1-3 years), likelihood (high, medium, or low)
+- Be specific. Name companies, sectors, regions.
 
-Return JSON: { "first": [...], "second": [...], "third": [...] }
-Each effect: { "category": "...", "title": "...", "description": "...", "timeframe": "...", "likelihood": "high|medium|low", "triggers": ["upstream title", ...] }`;
+Format: {"first":[{"category":"...","title":"...","description":"...","timeframe":"...","likelihood":"..."},...],"second":[...],"third":[...]}`;
 
   const isUrl = /^https?:\/\//i.test(news.trim());
   const userContent = isUrl
@@ -66,26 +62,31 @@ Each effect: { "category": "...", "title": "...", "description": "...", "timefra
 
   if (!content) throw new Error('No response from model');
 
-  // Try parsing, and if truncated try to repair by closing open brackets
+  // Try parsing; if truncated, cut back to last complete object and close brackets
   let parsed: EffectsResult;
   try {
     parsed = JSON.parse(content);
   } catch {
-    // Attempt to repair truncated JSON
+    // Find the last complete object by looking for the last "},"
     let repaired = content.trim();
-    // Close any open strings
-    const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
-    if (quoteCount % 2 !== 0) repaired += '"';
-    // Close open structures
-    const opens = (repaired.match(/[{[]/g) || []).length;
-    const closes = (repaired.match(/[}\]]/g) || []).length;
-    for (let i = 0; i < opens - closes; i++) {
-      // Guess based on last open bracket
-      const lastOpen = Math.max(repaired.lastIndexOf('{'), repaired.lastIndexOf('['));
-      repaired += repaired[lastOpen] === '{' ? '}' : ']';
+    const lastComplete = repaired.lastIndexOf('},');
+    if (lastComplete > 0) {
+      repaired = repaired.substring(0, lastComplete + 1);
     }
+    // Close any remaining open arrays and the root object
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/\]/g) || []).length;
+    const openBraces = (repaired.match(/\{/g) || []).length;
+    const closeBraces = (repaired.match(/\}/g) || []).length;
+    for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += ']';
+    for (let i = 0; i < openBraces - closeBraces; i++) repaired += '}';
     parsed = JSON.parse(repaired);
   }
+
+  // Ensure all three arrays exist
+  if (!parsed.first) parsed.first = [];
+  if (!parsed.second) parsed.second = [];
+  if (!parsed.third) parsed.third = [];
 
   return parsed;
 }
@@ -366,13 +367,6 @@ function EffectCard({ effect, order }: { effect: Effect; order: 1 | 2 | 3 }) {
           {effect.likelihood} likelihood
         </span>
       </div>
-      {effect.triggers.length > 0 && (
-        <div className="effects-card-links">
-          {effect.triggers.map((t, i) => (
-            <span key={i} className="effects-link-pill">&larr; {t}</span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
